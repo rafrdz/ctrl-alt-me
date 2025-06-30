@@ -1,0 +1,21 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/job-applications
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "company": "Test Company",
+    "position": "Software Engineer",
+    "link": "http://test.company/jobs/software-engineer",
+    "status": "applied",
+    "notes": ""
+  }
+}
