@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rafrdz/ctrl-alt-me/internal/database"
 	"github.com/rafrdz/ctrl-alt-me/internal/server"
+	"github.com/rafrdz/ctrl-alt-me/internal/service"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 		},
 	}
 	logLevel := &slog.LevelVar{}
-	logLevel.Set(slog.LevelDebug) // Set the default log level to Debug
+	logLevel.Set(slog.LevelDebug)
 	opts.Level = logLevel
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
 	logger.Debug("Logger initialized successfully")
@@ -29,7 +30,7 @@ func main() {
 	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
-		logger.Error("Error loading .env file")
+		logger.Error("Error loading .env file, using default values")
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -43,8 +44,11 @@ func main() {
 	}
 	defer db.Close()
 
+	appService := service.NewJobApplicationService(db)
+	logger.Debug("Application service initialized successfully")
+
 	// Set up the server
-	server := server.NewServer(logger)
+	server := server.NewServer(appService, logger)
 	logger.Debug("Server is running", "port", port)
 	if err := http.ListenAndServe(":"+port, server); err != nil {
 		logger.Error("Failed to start server", "error", err)

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "ctrl-alt-me",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

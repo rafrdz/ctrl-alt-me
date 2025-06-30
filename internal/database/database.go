@@ -8,7 +8,7 @@ import (
 )
 
 const CreateTable = `
-	CREATE TABLE IF NOT EXISTS jobs (
+	CREATE TABLE IF NOT EXISTS job_applications (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	company TEXT NOT NULL,
 	position TEXT NOT NULL,
@@ -19,15 +19,14 @@ const CreateTable = `
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`
 
-const InsertStmt = `INSERT INTO jobs (company, position, link, status, notes)VALUES (?, ?, ?, ?, ?)`
-const SelectAllStmt = `SELECT * FROM jobs`
-const SelectByIDStmt = `SELECT * FROM jobs WHERE id = ?`
-const UpdateStmt = `UPDATE jobs SET company = ?, position = ?, link = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-const DeleteStmt = `DELETE FROM jobs WHERE id = ?`
+const InsertStmt = `INSERT INTO job_applications (company, position, link, status, notes)VALUES (?, ?, ?, ?, ?)`
+const SelectAllStmt = `SELECT * FROM job_applications`
+const SelectByIDStmt = `SELECT * FROM job_applications WHERE id = ?`
+const UpdateStmt = `UPDATE job_applications SET company = ?, position = ?, link = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+const DeleteStmt = `DELETE FROM job_applications WHERE id = ?`
 
 func InitDB(logger *slog.Logger) (*sql.DB, error) {
-	logger.Debug("Initializing database connection")
-	db, err := sql.Open("sqlite3", "jobs.db")
+	db, err := sql.Open("sqlite3", "job_applications.db")
 	if err != nil {
 		return nil, err
 	}
