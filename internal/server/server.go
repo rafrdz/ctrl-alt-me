@@ -7,7 +7,7 @@ import (
 	"github.com/rafrdz/ctrl-alt-me/internal/service"
 )
 
-func NewServer(appService *service.JobApplicationService, logger *slog.Logger) *http.ServeMux {
+func NewServer(appService *service.JobApplicationService, logger *slog.Logger) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("/ping", handlePing(logger))
@@ -18,5 +18,6 @@ func NewServer(appService *service.JobApplicationService, logger *slog.Logger) *
 	mux.Handle("DELETE /job-applications/{id}", handleDeleteJobApplication(appService, logger))
 	logger.Debug("Routes added successfully")
 
-	return mux
+	// Wrap the mux with CORS middleware
+	return corsMiddleware(mux)
 }
