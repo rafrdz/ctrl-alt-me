@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { jobApplicationsApi } from '../services/api';
+import './CSVImport.css';
 
 interface CSVImportProps {
   onImportSuccess?: () => void;
@@ -139,10 +140,10 @@ export const CSVImport: React.FC<CSVImportProps> = ({
           )}
         </button>
         {isDropdownOpen && (
-          <ul className="dropdown-menu show position-absolute" style={{ top: '100%', left: '0', zIndex: 1050 }}>
+          <ul className="dropdown-menu show csv-dropdown">
             <li>
               <button
-                className="dropdown-item"
+                className="csv-dropdown-item"
                 onClick={handleFileSelect}
                 disabled={disabled || isUploading}
               >
@@ -152,7 +153,7 @@ export const CSVImport: React.FC<CSVImportProps> = ({
             </li>
             <li>
               <button
-                className="dropdown-item"
+                className="csv-dropdown-item"
                 onClick={downloadTemplate}
                 disabled={disabled || isUploading}
               >

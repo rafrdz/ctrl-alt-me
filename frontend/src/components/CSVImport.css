@@ -1,0 +1,64 @@
+.csv-import {
+  position: relative;
+}
+
+.csv-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  width: 250px;
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  z-index: 1050;
+  margin-top: 0.125rem;
+  max-height: 300px;
+  overflow-y: auto;
+  
+  /* Simple constraint - never exceed viewport minus margin */
+  max-width: calc(100vw - 20px);
+}
+
+/* For all screen sizes, ensure dropdown doesn't go off-screen */
+@media (max-width: 768px) {
+  .csv-dropdown {
+    min-width: 180px;
+    width: auto;
+    max-width: calc(100vw - 20px);
+  }
+}
+
+.csv-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  text-decoration: none;
+  color: var(--bs-body-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.csv-dropdown-item:hover:not(:disabled) {
+  background-color: var(--bs-secondary-bg);
+}
+
+.csv-dropdown-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dark theme support */
+[data-bs-theme="dark"] .csv-dropdown {
+  background-color: var(--bs-dark);
+  border-color: var(--bs-border-color-translucent);
+}
+
+[data-bs-theme="dark"] .csv-dropdown-item:hover:not(:disabled) {
+  background-color: var(--bs-gray-800);
+}

@@ -164,7 +164,6 @@ func (s *JobApplicationService) ImportJobApplicationsFromCSV(records [][]string)
 			notes = record[4]
 		}
 
-		// Validate status
 		validStatuses := map[string]bool{
 			"applied":   true,
 			"interview": true,

@@ -15,13 +15,13 @@ import (
 
 const (
 	DEFAULT_PORT          = "3000"
-	DEFAULT_FRONTEND_PORT = "5173"
+	DEFAULT_VITE_PORT     = "5173"
 	DEFAULT_DATABASE_NAME = "job_applications.db"
 )
 
 type Config struct {
 	Port         string
-	FrontendPort string
+	VitePort     string
 	DatabaseName string
 }
 
@@ -32,7 +32,7 @@ func main() {
 
 	// Load environment variables
 	config := createConfig(logger)
-	logger.Debug("Environment variables loaded", "port", config.Port, "frontendPort", config.FrontendPort, "databaseName", config.DatabaseName)
+	logger.Debug("Environment variables loaded", "port", config.Port, "frontendPort", config.VitePort, "databaseName", config.DatabaseName)
 
 	// Initialize the database
 	db, err := database.InitDB(config.DatabaseName, logger)
@@ -45,7 +45,7 @@ func main() {
 	logger.Info("Application service initialized")
 
 	// Set up the server
-	server := server.NewServer(appService, logger, config.FrontendPort)
+	server := server.NewServer(appService, logger, config.VitePort)
 	logger.Debug("Server is running", "port", config.Port)
 	if err := http.ListenAndServe(":"+config.Port, server); err != nil {
 		logger.Error("Failed to start server", "error", err)
@@ -73,7 +73,7 @@ func createConfig(logger *slog.Logger) *Config {
 
 	return &Config{
 		Port:         getEnvDefault("PORT", DEFAULT_PORT),
-		FrontendPort: getEnvDefault("FRONTEND_PORT", DEFAULT_FRONTEND_PORT),
+		VitePort:     getEnvDefault("VITE_PORT", DEFAULT_VITE_PORT),
 		DatabaseName: getEnvDefault("DATABASE_NAME", DEFAULT_DATABASE_NAME),
 	}
 }
