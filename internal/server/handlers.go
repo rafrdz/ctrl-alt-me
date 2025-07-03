@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/rafrdz/ctrl-alt-me/internal/service"
 )
@@ -186,7 +187,7 @@ func handleCSVUpload(jobAppSvc *service.JobApplicationService, logger *slog.Logg
 			// Skip header row if present
 			if len(records) > 0 && len(records[0]) > 0 {
 				firstRow := records[0]
-				if len(firstRow) >= 5 && (firstRow[0] == "company" || firstRow[0] == "Company") {
+				if len(firstRow) >= 5 && (strings.ToLower(firstRow[0]) == "date" || strings.ToLower(firstRow[0]) == "company") {
 					records = records[1:]
 				}
 			}

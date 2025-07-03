@@ -27,9 +27,51 @@ html, body {
   background-color: #f8f9fa;
 }
 
+/* Enhanced drop target styles */
 .kanban-column {
   min-height: 500px;
-  max-height: 80vh;
+  transition: all 0.2s ease;
+}
+
+.kanban-column.drag-over {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Improve column spacing for better drop targets */
+.kanban-board .col-lg-3,
+.kanban-board .col-md-6 {
+  padding: 0.75rem;
+  min-height: 600px;
+}
+
+/* Empty column drop zone */
+.kanban-drop-zone {
+  min-height: 200px;
+  border: 2px dashed transparent;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin: 0.5rem 0;
+}
+
+.kanban-drop-zone.drag-over {
+  border-color: #0d6efd;
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Auto-scroll indicator animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(2px);
+  }
 }
 
 .kanban-card {
@@ -135,6 +177,7 @@ html, body {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 

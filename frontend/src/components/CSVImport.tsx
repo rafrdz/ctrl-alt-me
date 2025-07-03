@@ -44,11 +44,11 @@ export const CSVImport: React.FC<CSVImportProps> = ({
 
   const downloadTemplate = () => {
     setIsDropdownOpen(false);
-    const csvContent = `company,position,link,status,notes
-"Example Corp","Software Engineer","https://example.com/job","applied","Initial application submitted"
-"Tech Startup","Full Stack Developer","","interview","Phone screening scheduled"
-"Big Tech Co","Senior Developer","https://careers.bigtech.com/123","rejected","Not a good fit for the role"`;
-    
+    const csvContent = `date,company,position,link,status,notes
+"2023-01-01","Example Corp","Software Engineer","https://example.com/job","applied","Initial application submitted"
+"2023-02-15","Tech Startup","Full Stack Developer","","interview","Phone screening scheduled"
+"2023-03-10","Big Tech Co","Senior Developer","https://careers.bigtech.com/123","rejected","Not a good fit for the role"`;
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
