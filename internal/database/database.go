@@ -25,12 +25,12 @@ const SelectByIDStmt = `SELECT * FROM job_applications WHERE id = ?`
 const UpdateStmt = `UPDATE job_applications SET company = ?, position = ?, link = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
 const DeleteStmt = `DELETE FROM job_applications WHERE id = ?`
 
-func InitDB(logger *slog.Logger) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "job_applications.db")
+func InitDB(dbName string, logger *slog.Logger) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("Database connection initialized", "driver", "sqlite3", "database", "job_applications.db")
+	logger.Info("Database connection initialized", "driver", "sqlite3", "database", dbName)
 
 	stmt, err := db.Prepare(CreateTable)
 	if err != nil {

@@ -13,6 +13,79 @@ import (
 	"github.com/rafrdz/ctrl-alt-me/internal/service"
 )
 
+const (
+	DEFAULT_PORT          = "3000"
+	DEFAULT_FRONTEND_PORT = "5173"
+	DEFAULT_DATABASE_NAME = "job_applications.db"
+)
+
+type Config struct {
+	Port         string
+	FrontendPort string
+	DatabaseName string
+}
+
+func main() {
+	// Configure the logger
+	logger, logFile := configureLogger()
+	defer logFile.Close() // Close the log file when main() exits
+
+	// Load environment variables
+	config := createConfig(logger)
+	logger.Debug("Environment variables loaded", "port", config.Port, "frontendPort", config.FrontendPort, "databaseName", config.DatabaseName)
+
+	// Initialize the database
+	db, err := database.InitDB(config.DatabaseName, logger)
+	if err != nil {
+		logger.Error("Failed to initialize database", "error", err)
+	}
+	defer db.Close()
+
+	appService := service.NewJobApplicationService(db, logger)
+	logger.Info("Application service initialized")
+
+	// Set up the server
+	server := server.NewServer(appService, logger, config.FrontendPort)
+	logger.Debug("Server is running", "port", config.Port)
+	if err := http.ListenAndServe(":"+config.Port, server); err != nil {
+		logger.Error("Failed to start server", "error", err)
+	}
+
+	// TODO: Correctly handle graceful shutdown
+	logger.Debug("Server is stopping")
+	if err := http.ListenAndServe(":"+config.Port, nil); err != nil {
+		logger.Error("Error during server shutdown", "error", err)
+	}
+	logger.Debug("Server stopped gracefully")
+
+	// Close the database connection
+	if err := db.Close(); err != nil {
+		logger.Error("Failed to close database", "error", err)
+	}
+}
+
+func createConfig(logger *slog.Logger) *Config {
+	// Load environment variables
+	err := godotenv.Load()
+	if err != nil {
+		logger.Error("Error loading .env file, using default values")
+	}
+
+	return &Config{
+		Port:         getEnvDefault("PORT", DEFAULT_PORT),
+		FrontendPort: getEnvDefault("FRONTEND_PORT", DEFAULT_FRONTEND_PORT),
+		DatabaseName: getEnvDefault("DATABASE_NAME", DEFAULT_DATABASE_NAME),
+	}
+}
+
+func getEnvDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
 func configureLogger() (*slog.Logger, *os.File) {
 	// Create a "logs" directory
 	if err := os.MkdirAll("logs", 0755); err != nil {
@@ -45,55 +118,4 @@ func configureLogger() (*slog.Logger, *os.File) {
 	logger := slog.New(slog.NewJSONHandler(multiWriter, opts))
 	logger.Info("Logger initialized", "logFile", logFileName)
 	return logger, logFile
-}
-
-func main() {
-	// Configure the logger
-	logger, logFile := configureLogger()
-	defer logFile.Close() // Close the log file when main() exits
-
-	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		logger.Error("Error loading .env file, using default values")
-	}
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
-
-	frontendPort := os.Getenv("FRONTEND_PORT")
-	if frontendPort == "" {
-		frontendPort = "5173"
-	}
-	logger.Debug("Environment variables loaded", "port", port, "frontendPort", frontendPort)
-
-	// Initialize the database
-	db, err := database.InitDB(logger)
-	if err != nil {
-		logger.Error("Failed to initialize database", "error", err)
-	}
-	defer db.Close()
-
-	appService := service.NewJobApplicationService(db, logger)
-	logger.Info("Application service initialized")
-
-	// Set up the server
-	server := server.NewServer(appService, logger, frontendPort)
-	logger.Debug("Server is running", "port", port)
-	if err := http.ListenAndServe(":"+port, server); err != nil {
-		logger.Error("Failed to start server", "error", err)
-	}
-
-	// TODO: Correctly handle graceful shutdown
-	logger.Debug("Server is stopping")
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		logger.Error("Error during server shutdown", "error", err)
-	}
-	logger.Debug("Server stopped gracefully")
-
-	// Close the database connection
-	if err := db.Close(); err != nil {
-		logger.Error("Failed to close database", "error", err)
-	}
 }
