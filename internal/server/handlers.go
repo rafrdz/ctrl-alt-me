@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -151,5 +152,60 @@ func handleDeleteJobApplication(jobAppSvc *service.JobApplicationService, logger
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNoContent)
+		})
+}
+
+func handleCSVUpload(jobAppSvc *service.JobApplicationService, logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			logger.Debug("Received CSV upload request", "method", r.Method, "url", r.URL.String())
+
+			err := r.ParseMultipartForm(10 << 20) // 10 MB limit
+			if err != nil {
+				logger.Error("Failed to parse multipart form", "error", err)
+				http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
+				return
+			}
+
+			file, _, err := r.FormFile("file")
+			if err != nil {
+				logger.Error("Failed to get file from form", "error", err)
+				http.Error(w, "Failed to get file from form", http.StatusBadRequest)
+				return
+			}
+			defer file.Close()
+
+			reader := csv.NewReader(file)
+			records, err := reader.ReadAll()
+			if err != nil {
+				logger.Error("Failed to read CSV records", "error", err)
+				http.Error(w, "Failed to read CSV records", http.StatusBadRequest)
+				return
+			}
+
+			// Skip header row if present
+			if len(records) > 0 && len(records[0]) > 0 {
+				firstRow := records[0]
+				if len(firstRow) >= 5 && (firstRow[0] == "company" || firstRow[0] == "Company") {
+					records = records[1:]
+				}
+			}
+
+			applications, err := jobAppSvc.ImportJobApplicationsFromCSV(records)
+			if err != nil {
+				logger.Error("Failed to import job applications", "error", err)
+				http.Error(w, "Failed to import job applications: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			logger.Info("CSV records processed successfully", "count", len(applications))
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			response := map[string]interface{}{
+				"message":  "CSV file uploaded successfully",
+				"imported": len(applications),
+			}
+			json.NewEncoder(w).Encode(response)
 		})
 }

@@ -16,8 +16,7 @@ func NewServer(appService *service.JobApplicationService, logger *slog.Logger, f
 	mux.Handle("GET /job-applications", handleGetJobApplications(appService, logger))
 	mux.Handle("PUT /job-applications", handleUpdateJobApplication(appService, logger))
 	mux.Handle("DELETE /job-applications/{id}", handleDeleteJobApplication(appService, logger))
-	logger.Debug("Routes added successfully")
-	logger.Debug("CORS middleware is being applied", "frontendPort", frontendPort)
+	mux.Handle("POST /job-applications/import", handleCSVUpload(appService, logger))
 
 	// Wrap the mux with CORS middleware
 	return corsMiddleware(mux, frontendPort)

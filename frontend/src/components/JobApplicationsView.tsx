@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { KanbanBoard } from './KanbanBoard';
 import { JobApplicationsList } from './JobApplicationsList';
 import { Header } from './Header';
+import { useJobApplications } from '../hooks/useJobApplications';
 
 type ViewMode = 'kanban' | 'list';
 
 export const JobApplicationsView: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const { refetch } = useJobApplications();
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
@@ -21,12 +23,19 @@ export const JobApplicationsView: React.FC = () => {
     setShowCreateForm(false);
   };
 
+  const handleImportSuccess = () => {
+    // Refetch the data to show newly imported applications
+    refetch();
+    setShowCreateForm(false); // Close any open forms
+  };
+
   return (
     <div className="container-fluid" style={{ height: '100vh', display: 'flex', flexDirection: 'column', padding: 0 }}>
       <Header 
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         onAddNew={handleAddNew}
+        onImportSuccess={handleImportSuccess}
         isFormOpen={showCreateForm}
       />
 

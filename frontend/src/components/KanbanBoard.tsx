@@ -210,7 +210,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         <div className="text-center py-5 mt-4">
           <i className="bi bi-briefcase" style={{ fontSize: '3rem', color: '#6c757d' }}></i>
           <h3 className="mt-3 text-muted">No job applications found</h3>
-          <p className="text-muted">Click "Add New Application" to get started!</p>
+          <p className="text-muted">Click "Add New" to get started!</p>
         </div>
       )}
     </div>
