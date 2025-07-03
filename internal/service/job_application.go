@@ -2,16 +2,19 @@ package service
 
 import (
 	"database/sql"
+	"log/slog"
+	"strings"
 
 	"github.com/rafrdz/ctrl-alt-me/internal/database"
 )
 
 type JobApplicationService struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
-func NewJobApplicationService(db *sql.DB) *JobApplicationService {
-	return &JobApplicationService{db: db}
+func NewJobApplicationService(db *sql.DB, logger *slog.Logger) *JobApplicationService {
+	return &JobApplicationService{db: db, logger: logger}
 }
 
 type NewJobApplication struct {
@@ -128,4 +131,46 @@ func (s *JobApplicationService) DeleteJobApplication(id string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *JobApplicationService) ImportJobApplicationsFromCSV(records [][]string) ([]JobApplication, error) {
+	stmt, err := s.db.Prepare(database.InsertStmt)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var applications []JobApplication
+	for _, record := range records {
+		if len(record) < 5 {
+			continue // Skip invalid records
+		}
+
+		app := JobApplication{
+			NewJobApplication: NewJobApplication{
+				Company:  record[2],
+				Position: record[3],
+				Link:     record[4],
+				Status:   strings.ToLower(record[5]),
+				Notes:    record[6],
+			},
+		}
+
+		s.logger.Debug("Importing job application", "company", app.Company, "position", app.Position)
+
+		res, err := stmt.Exec(app.Company, app.Position, app.Link, app.Status, app.Notes)
+		if err != nil {
+			return nil, err
+		}
+
+		id, err := res.LastInsertId()
+		if err != nil {
+			return nil, err
+		}
+		app.ID = id
+
+		applications = append(applications, app)
+	}
+
+	return applications, nil
 }

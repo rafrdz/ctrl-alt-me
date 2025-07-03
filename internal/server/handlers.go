@@ -1,8 +1,10 @@
 package server
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -151,5 +153,40 @@ func handleDeleteJobApplication(jobAppSvc *service.JobApplicationService, logger
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNoContent)
+		})
+}
+
+func handleCSVUpload(jobAppSvc *service.JobApplicationService, logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			logger.Debug("Received CSV upload request", "method", r.Method, "url", r.URL.String())
+
+			reader := csv.NewReader(r.Body)
+
+			var records [][]string
+
+			for {
+				record, err := reader.Read()
+
+				if err == io.EOF {
+					break
+				}
+
+				if err != nil {
+					logger.Error("Failed to read CSV record", "error", err)
+					http.Error(w, "Failed to read CSV record", http.StatusBadRequest)
+					return
+				}
+
+				records = append(records, record)
+			}
+
+			jobAppSvc.ImportJobApplicationsFromCSV(records)
+
+			// Process the CSV records as needed
+			logger.Info("CSV records processed", "count", len(records))
+
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "CSV file uploaded successfully")
 		})
 }

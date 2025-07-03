@@ -30,7 +30,7 @@ func InitDB(logger *slog.Logger) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Debug("Database connection established")
+	logger.Info("Database connection initialized", "driver", "sqlite3", "database", "job_applications.db")
 
 	stmt, err := db.Prepare(CreateTable)
 	if err != nil {

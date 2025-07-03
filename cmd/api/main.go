@@ -1,9 +1,11 @@
 package main
 
 import (
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/rafrdz/ctrl-alt-me/internal/database"
@@ -11,8 +13,23 @@ import (
 	"github.com/rafrdz/ctrl-alt-me/internal/service"
 )
 
-func main() {
-	// Configure the logger
+func configureLogger() (*slog.Logger, *os.File) {
+	// Create a "logs" directory
+	if err := os.MkdirAll("logs", 0755); err != nil {
+		panic("Failed to create logs directory: " + err.Error())
+	}
+
+	// Create the daily log file
+	logFileName := "logs/app-" + time.Now().Format("2006-01-02") + ".log"
+	logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		panic("Failed to open log file: " + err.Error())
+	}
+	// Don't defer close here - return the file so main() can close it
+
+	// Configure the logger with MultiWriter
+	multiWriter := io.MultiWriter(os.Stdout, logFile)
+
 	opts := &slog.HandlerOptions{
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.TimeKey {
@@ -24,8 +41,16 @@ func main() {
 	logLevel := &slog.LevelVar{}
 	logLevel.Set(slog.LevelDebug)
 	opts.Level = logLevel
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
-	logger.Debug("Logger initialized successfully")
+
+	logger := slog.New(slog.NewJSONHandler(multiWriter, opts))
+	logger.Info("Logger initialized", "logFile", logFileName)
+	return logger, logFile
+}
+
+func main() {
+	// Configure the logger
+	logger, logFile := configureLogger()
+	defer logFile.Close() // Close the log file when main() exits
 
 	// Load environment variables
 	err := godotenv.Load()
@@ -50,8 +75,8 @@ func main() {
 	}
 	defer db.Close()
 
-	appService := service.NewJobApplicationService(db)
-	logger.Debug("Application service initialized successfully")
+	appService := service.NewJobApplicationService(db, logger)
+	logger.Info("Application service initialized")
 
 	// Set up the server
 	server := server.NewServer(appService, logger, frontendPort)

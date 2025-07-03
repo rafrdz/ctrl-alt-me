@@ -32,3 +32,6 @@ go.work.sum
 
 # SQL database files
 *.db
+
+# Log files
+logs/
