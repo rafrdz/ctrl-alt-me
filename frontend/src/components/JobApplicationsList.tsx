@@ -41,99 +41,123 @@ export const JobApplicationsList: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="loading">Loading job applications...</div>;
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading job applications...</span>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="error">
+      <div className="alert alert-danger" role="alert">
         Error loading job applications: {error.message}
       </div>
     );
   }
 
   return (
-    <div className="job-applications-container">
-      <div className="header">
-        <h1>Job Applications</h1>
+    <div className="container-fluid py-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <h1 className="text-dark mb-0">Job Applications</h1>
         <button 
           onClick={handleCreateNew}
-          className="create-button"
+          className="btn btn-primary"
           disabled={showCreateForm || !!editingApplication}
         >
+          <i className="bi bi-plus-circle me-2"></i>
           Add New Application
         </button>
       </div>
 
       {(showCreateForm || editingApplication) && (
-        <div className="form-container">
-          <JobApplicationForm
-            application={editingApplication || undefined}
-            onSuccess={handleFormSuccess}
-            onCancel={handleFormCancel}
-          />
+        <div className="card mb-4">
+          <div className="card-body">
+            <JobApplicationForm
+              application={editingApplication || undefined}
+              onSuccess={handleFormSuccess}
+              onCancel={handleFormCancel}
+            />
+          </div>
         </div>
       )}
 
-      <div className="applications-list">
+      <div className="row g-3">
         {applications && applications.length > 0 ? (
           applications.map((application) => (
-            <div key={application.id} className="application-card">
-              <div className="application-header">
-                <h3>{application.position}</h3>
-                <span className={`status status-${application.status}`}>
-                  {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                </span>
-              </div>
-              
-              <div className="application-details">
-                <p><strong>Company:</strong> {application.company}</p>
-                {application.link && (
-                  <p>
-                    <strong>Link:</strong>{' '}
-                    <a href={application.link} target="_blank" rel="noopener noreferrer">
-                      View Job Posting
-                    </a>
-                  </p>
-                )}
-                {application.notes && (
-                  <p><strong>Notes:</strong> {application.notes}</p>
-                )}
-                <p className="dates">
-                  <small>
-                    Created: {new Date(application.created_at).toLocaleDateString()} | 
-                    Updated: {new Date(application.updated_at).toLocaleDateString()}
-                  </small>
-                </p>
-              </div>
+            <div key={application.id} className="col-lg-6 col-xl-4">
+              <div className="card h-100 shadow-sm">
+                <div className="card-header d-flex justify-content-between align-items-center">
+                  <h5 className="card-title mb-0">{application.position}</h5>
+                  <span className={`badge ${
+                    application.status === 'applied' ? 'bg-primary' :
+                    application.status === 'interview' ? 'bg-warning' :
+                    application.status === 'offer' ? 'bg-success' :
+                    application.status === 'rejected' ? 'bg-danger' :
+                    'bg-secondary'
+                  }`}>
+                    {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                  </span>
+                </div>
+                
+                <div className="card-body">
+                  <p className="card-text"><strong>Company:</strong> {application.company}</p>
+                  {application.link && (
+                    <p className="card-text">
+                      <strong>Link:</strong>{' '}
+                      <a href={application.link} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+                        View Job Posting <i className="bi bi-external-link"></i>
+                      </a>
+                    </p>
+                  )}
+                  {application.notes && (
+                    <p className="card-text"><strong>Notes:</strong> {application.notes}</p>
+                  )}
+                  <div className="text-muted small">
+                    <div>Created: {new Date(application.created_at).toLocaleDateString()}</div>
+                    <div>Updated: {new Date(application.updated_at).toLocaleDateString()}</div>
+                  </div>
+                </div>
 
-              <div className="application-actions">
-                <button
-                  onClick={() => handleEdit(application)}
-                  disabled={showCreateForm || !!editingApplication}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(application.id)}
-                  className="delete-button"
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-                </button>
+                <div className="card-footer bg-transparent">
+                  <div className="d-flex gap-2">
+                    <button
+                      onClick={() => handleEdit(application)}
+                      disabled={showCreateForm || !!editingApplication}
+                      className="btn btn-outline-primary btn-sm flex-fill"
+                    >
+                      <i className="bi bi-pencil me-1"></i>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(application.id)}
+                      className="btn btn-outline-danger btn-sm flex-fill"
+                      disabled={deleteMutation.isPending}
+                    >
+                      <i className="bi bi-trash me-1"></i>
+                      {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="empty-state">
-            <p>No job applications found.</p>
-            <p>Click "Add New Application" to get started!</p>
+          <div className="col-12">
+            <div className="text-center py-5">
+              <i className="bi bi-briefcase" style={{ fontSize: '3rem', color: '#6c757d' }}></i>
+              <h3 className="mt-3 text-muted">No job applications found</h3>
+              <p className="text-muted">Click "Add New Application" to get started!</p>
+            </div>
           </div>
         )}
       </div>
 
       {deleteMutation.error && (
-        <div className="error-message">
+        <div className="alert alert-danger mt-3" role="alert">
+          <i className="bi bi-exclamation-triangle me-2"></i>
           Error deleting application: {deleteMutation.error.message}
         </div>
       )}
