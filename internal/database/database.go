@@ -19,11 +19,12 @@ const CreateTable = `
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`
 
-const InsertStmt = `INSERT INTO job_applications (company, position, link, status, notes)VALUES (?, ?, ?, ?, ?)`
+const InsertStmt = `INSERT INTO job_applications (company, position, link, status, notes) VALUES (?, ?, ?, ?, ?)`
 const SelectAllStmt = `SELECT * FROM job_applications`
 const SelectByIDStmt = `SELECT * FROM job_applications WHERE id = ?`
 const UpdateStmt = `UPDATE job_applications SET company = ?, position = ?, link = ?, status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
 const DeleteStmt = `DELETE FROM job_applications WHERE id = ?`
+const ImportStmt = `INSERT INTO job_applications (company, position, link, status, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)`
 
 func InitDB(dbName string, logger *slog.Logger) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbName)

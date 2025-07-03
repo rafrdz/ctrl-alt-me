@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/rafrdz/ctrl-alt-me/internal/database"
 )
@@ -134,7 +135,7 @@ func (s *JobApplicationService) DeleteJobApplication(id string) error {
 }
 
 func (s *JobApplicationService) ImportJobApplicationsFromCSV(records [][]string) ([]JobApplication, error) {
-	stmt, err := s.db.Prepare(database.InsertStmt)
+	stmt, err := s.db.Prepare(database.ImportStmt)
 	if err != nil {
 		return nil, err
 	}
@@ -147,21 +148,38 @@ func (s *JobApplicationService) ImportJobApplicationsFromCSV(records [][]string)
 			continue // Skip invalid records
 		}
 
-		// CSV format: company,position,link,status,notes
-		company := record[0]
-		position := record[1]
+		// CSV format: date,company,position,link,status,notes
+		dateStr := record[0]
+		company := record[1]
+		position := record[2]
 		link := ""
 		status := "applied" // default status
 		notes := ""
 
 		if len(record) > 2 {
-			link = record[2]
+			link = record[3]
 		}
 		if len(record) > 3 {
-			status = strings.ToLower(strings.TrimSpace(record[3]))
+			status = strings.ToLower(strings.TrimSpace(record[4]))
 		}
 		if len(record) > 4 {
-			notes = record[4]
+			notes = record[5]
+		}
+
+		// Parse the date string (YYYY-MM-DD) and convert to proper timestamp
+		var createdAt string
+		if dateStr != "" {
+			parsedDate, err := time.Parse("2006-01-02", strings.TrimSpace(dateStr))
+			if err != nil {
+				s.logger.Warn("Invalid date format, using current time", "row", i+1, "date", dateStr, "error", err)
+				createdAt = time.Now().Format(time.RFC3339Nano)
+			} else {
+				// Convert to RFC3339Nano format for consistency
+				createdAt = parsedDate.Format(time.RFC3339Nano)
+			}
+		} else {
+			// Use current time if no date provided
+			createdAt = time.Now().Format(time.RFC3339Nano)
 		}
 
 		validStatuses := map[string]bool{
@@ -183,11 +201,12 @@ func (s *JobApplicationService) ImportJobApplicationsFromCSV(records [][]string)
 				Status:   status,
 				Notes:    notes,
 			},
+			CreatedAt: createdAt,
 		}
 
 		s.logger.Debug("Importing job application", "company", app.Company, "position", app.Position, "status", app.Status)
 
-		res, err := stmt.Exec(app.Company, app.Position, app.Link, app.Status, app.Notes)
+		res, err := stmt.Exec(app.Company, app.Position, app.Link, app.Status, app.Notes, app.CreatedAt)
 		if err != nil {
 			s.logger.Error("Failed to insert job application", "error", err, "company", app.Company, "position", app.Position)
 			return nil, err
