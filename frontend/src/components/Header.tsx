@@ -1,5 +1,6 @@
 import React from 'react';
 import { ThemeToggle } from './ThemeToggle';
+import { CSVImport } from './CSVImport';
 import { useTheme } from '../contexts/ThemeContext';
 import './Header.css';
 
@@ -9,6 +10,7 @@ interface HeaderProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   onAddNew: () => void;
+  onImportSuccess?: () => void;
   isFormOpen: boolean;
 }
 
@@ -16,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   viewMode,
   onViewModeChange,
   onAddNew,
+  onImportSuccess,
   isFormOpen,
 }) => {
   const { theme } = useTheme();
@@ -55,17 +58,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   className={`btn btn-sm ${
-                    viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-primary'
-                  }`}
-                  onClick={() => onViewModeChange('kanban')}
-                  disabled={isFormOpen}
-                >
-                  <i className="bi bi-kanban me-1"></i>
-                  <span className="d-none d-sm-inline">Kanban</span>
-                </button>
-                <button
-                  type="button"
-                  className={`btn btn-sm ${
                     viewMode === 'list' ? 'btn-primary' : 'btn-outline-primary'
                   }`}
                   onClick={() => onViewModeChange('list')}
@@ -73,6 +65,17 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <i className="bi bi-list-ul me-1"></i>
                   <span className="d-none d-sm-inline">List</span>
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-sm ${
+                    viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-primary'
+                  }`}
+                  onClick={() => onViewModeChange('kanban')}
+                  disabled={isFormOpen}
+                >
+                  <i className="bi bi-kanban me-1"></i>
+                  <span className="d-none d-sm-inline">Kanban</span>
                 </button>
               </div>
             </div>
@@ -88,6 +91,14 @@ export const Header: React.FC<HeaderProps> = ({
                 <i className="bi bi-plus-circle me-1"></i>
                 <span className="d-none d-sm-inline">Add New</span>
               </button>
+            </div>
+
+            {/* CSV Import */}
+            <div className="nav-item me-3">
+              <CSVImport
+                onImportSuccess={onImportSuccess}
+                disabled={isFormOpen}
+              />
             </div>
 
             {/* Theme Toggle */}

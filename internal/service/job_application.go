@@ -141,25 +141,56 @@ func (s *JobApplicationService) ImportJobApplicationsFromCSV(records [][]string)
 	defer stmt.Close()
 
 	var applications []JobApplication
-	for _, record := range records {
-		if len(record) < 5 {
+	for i, record := range records {
+		if len(record) < 4 {
+			s.logger.Warn("Skipping invalid CSV record", "row", i+1, "fields", len(record))
 			continue // Skip invalid records
+		}
+
+		// CSV format: company,position,link,status,notes
+		company := record[0]
+		position := record[1]
+		link := ""
+		status := "applied" // default status
+		notes := ""
+
+		if len(record) > 2 {
+			link = record[2]
+		}
+		if len(record) > 3 {
+			status = strings.ToLower(strings.TrimSpace(record[3]))
+		}
+		if len(record) > 4 {
+			notes = record[4]
+		}
+
+		// Validate status
+		validStatuses := map[string]bool{
+			"applied":   true,
+			"interview": true,
+			"offer":     true,
+			"rejected":  true,
+		}
+		if !validStatuses[status] {
+			s.logger.Warn("Invalid status, using default", "row", i+1, "status", status)
+			status = "applied"
 		}
 
 		app := JobApplication{
 			NewJobApplication: NewJobApplication{
-				Company:  record[2],
-				Position: record[3],
-				Link:     record[4],
-				Status:   strings.ToLower(record[5]),
-				Notes:    record[6],
+				Company:  company,
+				Position: position,
+				Link:     link,
+				Status:   status,
+				Notes:    notes,
 			},
 		}
 
-		s.logger.Debug("Importing job application", "company", app.Company, "position", app.Position)
+		s.logger.Debug("Importing job application", "company", app.Company, "position", app.Position, "status", app.Status)
 
 		res, err := stmt.Exec(app.Company, app.Position, app.Link, app.Status, app.Notes)
 		if err != nil {
+			s.logger.Error("Failed to insert job application", "error", err, "company", app.Company, "position", app.Position)
 			return nil, err
 		}
 

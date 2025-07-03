@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 
@@ -161,32 +160,52 @@ func handleCSVUpload(jobAppSvc *service.JobApplicationService, logger *slog.Logg
 		func(w http.ResponseWriter, r *http.Request) {
 			logger.Debug("Received CSV upload request", "method", r.Method, "url", r.URL.String())
 
-			reader := csv.NewReader(r.Body)
-
-			var records [][]string
-
-			for {
-				record, err := reader.Read()
-
-				if err == io.EOF {
-					break
-				}
-
-				if err != nil {
-					logger.Error("Failed to read CSV record", "error", err)
-					http.Error(w, "Failed to read CSV record", http.StatusBadRequest)
-					return
-				}
-
-				records = append(records, record)
+			err := r.ParseMultipartForm(10 << 20) // 10 MB limit
+			if err != nil {
+				logger.Error("Failed to parse multipart form", "error", err)
+				http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
+				return
 			}
 
-			jobAppSvc.ImportJobApplicationsFromCSV(records)
+			file, _, err := r.FormFile("file")
+			if err != nil {
+				logger.Error("Failed to get file from form", "error", err)
+				http.Error(w, "Failed to get file from form", http.StatusBadRequest)
+				return
+			}
+			defer file.Close()
 
-			// Process the CSV records as needed
-			logger.Info("CSV records processed", "count", len(records))
+			reader := csv.NewReader(file)
+			records, err := reader.ReadAll()
+			if err != nil {
+				logger.Error("Failed to read CSV records", "error", err)
+				http.Error(w, "Failed to read CSV records", http.StatusBadRequest)
+				return
+			}
 
+			// Skip header row if present
+			if len(records) > 0 && len(records[0]) > 0 {
+				firstRow := records[0]
+				if len(firstRow) >= 5 && (firstRow[0] == "company" || firstRow[0] == "Company") {
+					records = records[1:]
+				}
+			}
+
+			applications, err := jobAppSvc.ImportJobApplicationsFromCSV(records)
+			if err != nil {
+				logger.Error("Failed to import job applications", "error", err)
+				http.Error(w, "Failed to import job applications: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			logger.Info("CSV records processed successfully", "count", len(applications))
+
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, "CSV file uploaded successfully")
+			response := map[string]interface{}{
+				"message":  "CSV file uploaded successfully",
+				"imported": len(applications),
+			}
+			json.NewEncoder(w).Encode(response)
 		})
 }

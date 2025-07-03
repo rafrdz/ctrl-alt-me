@@ -39,6 +39,37 @@ export const jobApplicationsApi = {
   delete: async (id: number): Promise<void> => {
     await api.delete(`/job-applications/${id}`);
   },
+
+  // Import job applications from CSV
+  importCSV: async (file: File): Promise<{ imported: number; message: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Use fetch instead of axios for file upload to avoid content-type issues
+    const response = await fetch(`${API_BASE_URL}/job-applications/import`, {
+      method: 'POST',
+      body: formData,
+      // Don't set Content-Type header - let browser set it with boundary for FormData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error || errorJson.message || errorMessage;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return {
+      imported: result.imported || result.count || 0,
+      message: result.message || 'CSV file uploaded successfully'
+    };
+  },
 };
 
 export default api;
