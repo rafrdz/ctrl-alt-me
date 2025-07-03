@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { JobApplication } from '../types/jobApplication';
 import { useDeleteJobApplication } from '../hooks/useJobApplications';
 import { useTheme } from '../contexts/ThemeContext';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface KanbanCardProps {
   application: JobApplication;
@@ -138,20 +139,33 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         )}
 
         {application.notes && (
-          <p
+          <div
             className={`card-text small mb-2 ${mutedTextColor}`}
             style={{
               fontSize: '0.75rem',
-              maxHeight: '60px',
+              maxHeight: '80px',
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
             }}
           >
-            {application.notes}
-          </p>
+            <div
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 4,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              <MarkdownRenderer 
+                content={application.notes}
+                compact={true}
+                style={{ 
+                  fontSize: '0.75rem',
+                  lineHeight: '1.2'
+                }}
+              />
+            </div>
+          </div>
         )}
 
         <div className={mutedTextColor} style={{ fontSize: '0.7rem' }}>

@@ -7,12 +7,12 @@ import { useTheme } from '../contexts/ThemeContext';
 type ViewMode = 'kanban' | 'list';
 
 export const JobApplicationsView: React.FC = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const { theme } = useTheme();
 
   return (
-    <div className="container-fluid">
-      <div className="d-flex justify-content-between align-items-center mb-4 pt-3">
+    <div className="container-fluid" style={{ height: '100vh', display: 'flex', flexDirection: 'column', padding: 0 }}>
+      <div className="d-flex justify-content-between align-items-center mb-4 pt-3 px-3">
         <h1 className={`mb-0 ${theme === 'dark' ? 'text-light' : 'text-dark'}`}>Job Applications</h1>
         <div className="d-flex gap-2 align-items-center">
           <ThemeToggle />
@@ -37,7 +37,9 @@ export const JobApplicationsView: React.FC = () => {
         </div>
       </div>
 
-      {viewMode === 'kanban' ? <KanbanBoard /> : <JobApplicationsList />}
+      <div style={{ flex: 1, overflow: 'hidden', paddingLeft: '1rem', paddingRight: '1rem' }}>
+        {viewMode === 'kanban' ? <KanbanBoard /> : <JobApplicationsList />}
+      </div>
     </div>
   );
 };

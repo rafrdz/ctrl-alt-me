@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { JobApplication, NewJobApplication, JobApplicationStatus } from '../types/jobApplication';
 import { useCreateJobApplication, useUpdateJobApplication } from '../hooks/useJobApplications';
 import { useTheme } from '../contexts/ThemeContext';
+import { MarkdownEditor } from './MarkdownEditor';
 
 interface JobApplicationFormProps {
   application?: JobApplication;
@@ -131,14 +132,14 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
 
       <div className="form-group">
         <label htmlFor="notes">Notes</label>
-        <textarea
+        <MarkdownEditor
           id="notes"
           name="notes"
           value={formData.notes}
-          onChange={handleChange}
-          rows={4}
-          placeholder="Additional notes about this application..."
+          onChange={(value) => setFormData(prev => ({ ...prev, notes: value }))}
+          placeholder="Add notes about this application... (Markdown supported)"
           disabled={isLoading}
+          rows={6}
         />
       </div>
 

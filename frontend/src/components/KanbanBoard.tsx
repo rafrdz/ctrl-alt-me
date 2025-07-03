@@ -118,7 +118,7 @@ export const KanbanBoard: React.FC = () => {
   }
 
   return (
-    <div className="kanban-board">
+    <div className="kanban-board" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {(showCreateForm || editingApplication) && (
         <div className="card mb-4">
           <div className="card-body">
@@ -147,12 +147,12 @@ export const KanbanBoard: React.FC = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="row g-3">
+        <div className="row g-3" style={{ flex: 1, margin: 0, overflow: 'hidden' }}>
           {COLUMNS.map((column) => {
             const columnApplications = groupedApplications[column.id] || [];
             
             return (
-              <div key={column.id} className="col-lg-3 col-md-6">
+              <div key={column.id} className="col-lg-3 col-md-6" style={{ height: '100%' }}>
                 <KanbanColumn
                   id={column.id}
                   title={column.title}

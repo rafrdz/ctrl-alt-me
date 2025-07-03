@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { JobApplication } from '../types/jobApplication';
 import { useJobApplications, useDeleteJobApplication } from '../hooks/useJobApplications';
 import { JobApplicationForm } from './JobApplicationForm';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 export const JobApplicationsList: React.FC = () => {
   const { data: applications, isLoading, error } = useJobApplications();
@@ -59,7 +60,7 @@ export const JobApplicationsList: React.FC = () => {
   }
 
   return (
-    <div>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {(showCreateForm || editingApplication) && (
         <div className="card mb-4">
           <div className="card-body">
@@ -83,10 +84,10 @@ export const JobApplicationsList: React.FC = () => {
         </button>
       </div>
 
-      <div className="row g-3">
+      <div className="row g-3" style={{ flex: 1, overflow: 'auto', margin: 0 }}>
         {applications && applications.length > 0 ? (
           applications.map((application) => (
-            <div key={application.id} className="col-lg-6 col-xl-4">
+            <div key={application.id} className="col-lg-6 col-xl-4" style={{ marginBottom: '1rem' }}>
               <div className="card h-100 shadow-sm">
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <h5 className="card-title mb-0">{application.position}</h5>
@@ -112,7 +113,12 @@ export const JobApplicationsList: React.FC = () => {
                     </p>
                   )}
                   {application.notes && (
-                    <p className="card-text"><strong>Notes:</strong> {application.notes}</p>
+                    <div className="card-text">
+                      <strong>Notes:</strong>
+                      <div className="mt-2">
+                        <MarkdownRenderer content={application.notes} />
+                      </div>
+                    </div>
                   )}
                   <div className="text-muted small">
                     <div>Created: {new Date(application.created_at).toLocaleDateString()}</div>

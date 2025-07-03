@@ -29,21 +29,23 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={`card h-100 ${isOver ? 'shadow-lg border-primary' : 'shadow-sm'}`}
+      className={`card ${isOver ? 'shadow-lg border-primary' : 'shadow-sm'}`}
       style={{
-        minHeight: '500px',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         transition: 'all 0.2s ease',
         backgroundColor: isOver ? dropHoverBgColor : cardBgColor,
         borderColor: theme === 'dark' ? '#4a5568' : '#dee2e6',
       }}
     >
-      <div className={`card-header ${bgColor} text-white`}>
+      <div className={`card-header ${bgColor} text-white`} style={{ flexShrink: 0 }}>
         <div className="d-flex justify-content-between align-items-center">
           <h5 className="mb-0 fw-bold">{title}</h5>
           <span className="badge bg-light text-dark fw-bold">{count}</span>
         </div>
       </div>
-      <div className="card-body p-2" style={{ overflowY: 'auto' }}>
+      <div className="card-body p-2" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
         <div className="d-flex flex-column gap-2">
           {children}
         </div>
