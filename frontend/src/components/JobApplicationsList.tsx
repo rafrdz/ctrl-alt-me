@@ -4,12 +4,23 @@ import { useJobApplications, useDeleteJobApplication } from '../hooks/useJobAppl
 import { JobApplicationForm } from './JobApplicationForm';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
-export const JobApplicationsList: React.FC = () => {
+interface JobApplicationsListProps {
+  showCreateForm?: boolean;
+  onFormClose?: () => void;
+}
+
+export const JobApplicationsList: React.FC<JobApplicationsListProps> = ({
+  showCreateForm: externalShowCreateForm = false,
+  onFormClose,
+}) => {
   const { data: applications, isLoading, error } = useJobApplications();
   const deleteMutation = useDeleteJobApplication();
   
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  
+  // Use external showCreateForm if provided, otherwise use internal state
+  const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
+  const showCreateForm = externalShowCreateForm || internalShowCreateForm;
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this job application?')) {
@@ -23,22 +34,29 @@ export const JobApplicationsList: React.FC = () => {
 
   const handleEdit = (application: JobApplication) => {
     setEditingApplication(application);
-    setShowCreateForm(false);
-  };
-
-  const handleCreateNew = () => {
-    setShowCreateForm(true);
-    setEditingApplication(null);
+    if (onFormClose) {
+      onFormClose();
+    } else {
+      setInternalShowCreateForm(false);
+    }
   };
 
   const handleFormSuccess = () => {
     setEditingApplication(null);
-    setShowCreateForm(false);
+    if (onFormClose) {
+      onFormClose();
+    } else {
+      setInternalShowCreateForm(false);
+    }
   };
 
   const handleFormCancel = () => {
     setEditingApplication(null);
-    setShowCreateForm(false);
+    if (onFormClose) {
+      onFormClose();
+    } else {
+      setInternalShowCreateForm(false);
+    }
   };
 
   if (isLoading) {
@@ -72,17 +90,6 @@ export const JobApplicationsList: React.FC = () => {
           </div>
         </div>
       )}
-
-      <div className="d-flex justify-content-end mb-3">
-        <button 
-          onClick={handleCreateNew}
-          className="btn btn-primary"
-          disabled={showCreateForm || !!editingApplication}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          Add New Application
-        </button>
-      </div>
 
       <div className="row g-3" style={{ flex: 1, overflow: 'auto', margin: 0 }}>
         {applications && applications.length > 0 ? (

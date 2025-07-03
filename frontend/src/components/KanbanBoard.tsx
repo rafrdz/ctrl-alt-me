@@ -23,12 +23,23 @@ const COLUMNS: { id: JobApplicationStatus; title: string; bgColor: string }[] = 
   { id: 'ghosted', title: 'Ghosted', bgColor: 'bg-secondary' },
 ];
 
-export const KanbanBoard: React.FC = () => {
+interface KanbanBoardProps {
+  showCreateForm?: boolean;
+  onFormClose?: () => void;
+}
+
+export const KanbanBoard: React.FC<KanbanBoardProps> = ({
+  showCreateForm: externalShowCreateForm = false,
+  onFormClose,
+}) => {
   const { data: applications, isLoading, error } = useJobApplications();
   const updateMutation = useUpdateJobApplication();
   const [activeApplication, setActiveApplication] = useState<JobApplication | null>(null);
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  
+  // Use external showCreateForm if provided, otherwise use internal state
+  const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
+  const showCreateForm = externalShowCreateForm || internalShowCreateForm;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -81,22 +92,29 @@ export const KanbanBoard: React.FC = () => {
 
   const handleEdit = (application: JobApplication) => {
     setEditingApplication(application);
-    setShowCreateForm(false);
-  };
-
-  const handleCreateNew = () => {
-    setShowCreateForm(true);
-    setEditingApplication(null);
+    if (onFormClose) {
+      onFormClose();
+    } else {
+      setInternalShowCreateForm(false);
+    }
   };
 
   const handleFormSuccess = () => {
     setEditingApplication(null);
-    setShowCreateForm(false);
+    if (onFormClose) {
+      onFormClose();
+    } else {
+      setInternalShowCreateForm(false);
+    }
   };
 
   const handleFormCancel = () => {
     setEditingApplication(null);
-    setShowCreateForm(false);
+    if (onFormClose) {
+      onFormClose();
+    } else {
+      setInternalShowCreateForm(false);
+    }
   };
 
   if (isLoading) {
@@ -130,17 +148,6 @@ export const KanbanBoard: React.FC = () => {
           </div>
         </div>
       )}
-
-      <div className="d-flex justify-content-end mb-3">
-        <button 
-          onClick={handleCreateNew}
-          className="btn btn-primary"
-          disabled={showCreateForm || !!editingApplication}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          Add New Application
-        </button>
-      </div>
 
       <DndContext
         sensors={sensors}
