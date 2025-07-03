@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { JobApplication } from '../types/jobApplication';
 import { useDeleteJobApplication } from '../hooks/useJobApplications';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface KanbanCardProps {
   application: JobApplication;
@@ -18,6 +19,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   isDragging = false,
 }) => {
   const deleteMutation = useDeleteJobApplication();
+  const { theme } = useTheme();
   
   const {
     attributes,
@@ -30,6 +32,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     id: application.id,
     disabled,
   });
+
+  const cardBgColor = theme === 'dark' ? '#374151' : 'white';
+  const textColor = theme === 'dark' ? 'text-light' : 'text-dark';
+  const mutedTextColor = theme === 'dark' ? 'text-light opacity-75' : 'text-muted';
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -53,13 +59,19 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     onEdit(application);
   };
 
+  const cardStyle = {
+    ...style,
+    backgroundColor: cardBgColor,
+    borderColor: theme === 'dark' ? '#4b5563' : '#dee2e6',
+  };
+
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={cardStyle}
       {...attributes}
       {...listeners}
-      className={`card border-0 shadow-sm ${
+      className={`card border-0 shadow-sm ${textColor} ${
         isSortableDragging ? 'shadow-lg' : ''
       }`}
       role="button"
@@ -105,7 +117,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           </div>
         </div>
 
-        <p className="card-text text-muted mb-2" style={{ fontSize: '0.85rem' }}>
+        <p className={`card-text mb-2 ${mutedTextColor}`} style={{ fontSize: '0.85rem' }}>
           <strong>{application.company}</strong>
         </p>
 
@@ -127,7 +139,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
 
         {application.notes && (
           <p
-            className="card-text text-muted small mb-2"
+            className={`card-text small mb-2 ${mutedTextColor}`}
             style={{
               fontSize: '0.75rem',
               maxHeight: '60px',
@@ -142,7 +154,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           </p>
         )}
 
-        <div className="text-muted" style={{ fontSize: '0.7rem' }}>
+        <div className={mutedTextColor} style={{ fontSize: '0.7rem' }}>
           <div>Applied: {new Date(application.created_at).toLocaleDateString()}</div>
           {application.updated_at !== application.created_at && (
             <div>Updated: {new Date(application.updated_at).toLocaleDateString()}</div>

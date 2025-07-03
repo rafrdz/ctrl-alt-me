@@ -144,3 +144,44 @@
 .drag-overlay {
   animation: dragStart 0.2s ease-out;
 }
+
+/* Dark mode styles */
+[data-bs-theme="dark"] .kanban-board {
+  background-color: #1a202c;
+}
+
+[data-bs-theme="dark"] .kanban-card {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f7fafc;
+}
+
+[data-bs-theme="dark"] .kanban-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .drop-zone {
+  border-color: #4b5563;
+}
+
+[data-bs-theme="dark"] .drop-zone.active {
+  border-color: #3182ce;
+  background-color: rgba(49, 130, 206, 0.1);
+}
+
+[data-bs-theme="dark"] .drop-zone.over {
+  border-color: #38a169;
+  background-color: rgba(56, 161, 105, 0.15);
+}
+
+[data-bs-theme="dark"] .kanban-column-content::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+[data-bs-theme="dark"] .kanban-column-content::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+[data-bs-theme="dark"] .kanban-column-content::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}

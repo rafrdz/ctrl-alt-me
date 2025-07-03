@@ -1,4 +1,16 @@
-# Job Applications Frontend
+# Jo## Features
+
+- 📋 **Kanban Board View** - Drag and drop job applications between status columns (Applied, Interview, Rejected, Ghosted)
+- 🌙 **Dark/Light Mode Toggle** - Switch between dark and light themes with automatic system preference detection
+- 📝 Create, read, update, and delete job applications
+- 🏢 Track company, position, job links, status, and notes
+- 📊 Visual status indicators with color-coded columns
+- 🔄 Real-time data synchronization with backend API
+- 📱 Responsive design for desktop and mobile
+- 🔀 Toggle between Kanban and List views
+- ⚡ Fast development and build times with Vite
+- 🔧 TypeScript for type safety
+- 🎯 Drag-and-drop functionality with @dnd-kitns Frontend
 
 A modern React TypeScript frontend application for managing job applications with a kanban-style board interface, built with Vite and integrated with a Go REST API backend.
 
@@ -102,6 +114,12 @@ src/
 - Status changes via drag-and-drop automatically sync with the backend
 - Card counts update in real-time for each column
 - Error handling for failed drag operations
+
+## Theme Toggle
+- **Dark/Light Mode** - Toggle between dark and light themes
+- **System Preference Detection** - Automatically detects and applies system color scheme preference
+- **Persistent Settings** - Theme preference is saved in localStorage
+- **Consistent Styling** - All components adapt to selected theme
 
 ## Usage
 

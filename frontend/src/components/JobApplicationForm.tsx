@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { JobApplication, NewJobApplication, JobApplicationStatus } from '../types/jobApplication';
 import { useCreateJobApplication, useUpdateJobApplication } from '../hooks/useJobApplications';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface JobApplicationFormProps {
   application?: JobApplication;
@@ -21,6 +22,7 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
   onCancel,
 }) => {
   const isEditing = !!application;
+  const { theme } = useTheme();
   
   const [formData, setFormData] = useState<NewJobApplication>({
     company: application?.company || '',
@@ -63,9 +65,11 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
+  const formBgColor = theme === 'dark' ? 'bg-dark' : 'bg-light';
+  const textColor = theme === 'dark' ? 'text-light' : 'text-dark';
 
   return (
-    <form onSubmit={handleSubmit} className="job-application-form">
+    <form onSubmit={handleSubmit} className={`job-application-form ${formBgColor} ${textColor}`}>
       <h2>{isEditing ? 'Edit Job Application' : 'Add New Job Application'}</h2>
       
       <div className="form-group">

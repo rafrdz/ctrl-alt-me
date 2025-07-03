@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { JobApplicationStatus } from '../types/jobApplication';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface KanbanColumnProps {
   id: JobApplicationStatus;
@@ -20,6 +21,10 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   const { setNodeRef, isOver } = useDroppable({
     id,
   });
+  const { theme } = useTheme();
+
+  const cardBgColor = theme === 'dark' ? '#2d3748' : 'white';
+  const dropHoverBgColor = theme === 'dark' ? '#4a5568' : '#f8f9fa';
 
   return (
     <div
@@ -28,7 +33,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
       style={{
         minHeight: '500px',
         transition: 'all 0.2s ease',
-        backgroundColor: isOver ? '#f8f9fa' : 'white',
+        backgroundColor: isOver ? dropHoverBgColor : cardBgColor,
+        borderColor: theme === 'dark' ? '#4a5568' : '#dee2e6',
       }}
     >
       <div className={`card-header ${bgColor} text-white`}>
