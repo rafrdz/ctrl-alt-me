@@ -37,6 +37,12 @@ func main() {
 		port = "3000"
 	}
 
+	frontendPort := os.Getenv("FRONTEND_PORT")
+	if frontendPort == "" {
+		frontendPort = "5173"
+	}
+	logger.Debug("Environment variables loaded", "port", port, "frontendPort", frontendPort)
+
 	// Initialize the database
 	db, err := database.InitDB(logger)
 	if err != nil {
@@ -48,7 +54,7 @@ func main() {
 	logger.Debug("Application service initialized successfully")
 
 	// Set up the server
-	server := server.NewServer(appService, logger)
+	server := server.NewServer(appService, logger, frontendPort)
 	logger.Debug("Server is running", "port", port)
 	if err := http.ListenAndServe(":"+port, server); err != nil {
 		logger.Error("Failed to start server", "error", err)

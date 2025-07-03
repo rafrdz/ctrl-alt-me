@@ -1,0 +1,92 @@
+/* Header/Navbar Styles */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1030;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.navbar-brand i {
+  color: #007bff;
+}
+
+[data-bs-theme="dark"] .navbar-brand i {
+  color: #0d6efd;
+}
+
+/* Responsive button text */
+@media (max-width: 576px) {
+  .navbar-brand span {
+    font-size: 1rem;
+  }
+  
+  .btn-group .btn {
+    padding: 0.375rem 0.5rem;
+  }
+  
+  .btn-group .btn i {
+    font-size: 0.875rem;
+  }
+}
+
+/* Navigation items spacing */
+.navbar-nav .nav-item {
+  display: flex;
+  align-items: center;
+}
+
+/* Button group styling in navbar */
+.navbar .btn-group .btn {
+  border-radius: 0.375rem;
+  font-weight: 500;
+}
+
+.navbar .btn-group .btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.navbar .btn-group .btn:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Add button styling */
+.navbar .btn-success {
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.navbar .btn-success:hover {
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Theme toggle in navbar */
+.navbar .theme-toggle {
+  margin-left: 0.5rem;
+}
+
+/* Mobile navbar adjustments */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+  
+  [data-bs-theme="dark"] .navbar-collapse {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .navbar-nav {
+    gap: 0.5rem;
+  }
+  
+  .navbar-nav .nav-item {
+    justify-content: flex-end;
+  }
+}

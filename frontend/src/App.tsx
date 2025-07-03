@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { JobApplicationsList } from './components/JobApplicationsList';
+import { JobApplicationsView } from './components/JobApplicationsView';
+import { ThemeProvider } from './contexts/ThemeContext';
 import './components/JobApplications.css';
+import './App.css';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -14,11 +16,13 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="App">
-        <JobApplicationsList />
-      </div>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <div className="App" style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+          <JobApplicationsView />
+        </div>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,2 +1,3 @@
 # ctrl-alt-me
-Not the end. Just a restart.
+
+Hobby job application tracking system.

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { JobApplication, NewJobApplication, JobApplicationStatus } from '../types/jobApplication';
 import { useCreateJobApplication, useUpdateJobApplication } from '../hooks/useJobApplications';
+import { useTheme } from '../contexts/ThemeContext';
+import { MarkdownEditor } from './MarkdownEditor';
 
 interface JobApplicationFormProps {
   application?: JobApplication;
@@ -10,10 +12,9 @@ interface JobApplicationFormProps {
 
 const statusOptions: JobApplicationStatus[] = [
   'applied',
-  'interviewing',
-  'offer',
+  'interview',
   'rejected',
-  'withdrawn',
+  'ghosted',
 ];
 
 export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
@@ -22,6 +23,7 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
   onCancel,
 }) => {
   const isEditing = !!application;
+  const { theme } = useTheme();
   
   const [formData, setFormData] = useState<NewJobApplication>({
     company: application?.company || '',
@@ -64,9 +66,11 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
+  const formBgColor = theme === 'dark' ? 'bg-dark' : 'bg-light';
+  const textColor = theme === 'dark' ? 'text-light' : 'text-dark';
 
   return (
-    <form onSubmit={handleSubmit} className="job-application-form">
+    <form onSubmit={handleSubmit} className={`job-application-form ${formBgColor} ${textColor}`}>
       <h2>{isEditing ? 'Edit Job Application' : 'Add New Job Application'}</h2>
       
       <div className="form-group">
@@ -128,14 +132,14 @@ export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
 
       <div className="form-group">
         <label htmlFor="notes">Notes</label>
-        <textarea
+        <MarkdownEditor
           id="notes"
           name="notes"
           value={formData.notes}
-          onChange={handleChange}
-          rows={4}
-          placeholder="Additional notes about this application..."
+          onChange={(value) => setFormData(prev => ({ ...prev, notes: value }))}
+          placeholder="Add notes about this application... (Markdown supported)"
           disabled={isLoading}
+          rows={6}
         />
       </div>
 
