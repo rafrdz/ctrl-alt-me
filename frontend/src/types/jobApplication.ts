@@ -17,4 +17,4 @@ export interface NewJobApplication {
   notes: string;
 }
 
-export type JobApplicationStatus = 'applied' | 'interviewing' | 'offer' | 'rejected' | 'withdrawn';
+export type JobApplicationStatus = 'applied' | 'interview' | 'rejected' | 'ghosted';

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { JobApplicationsList } from './components/JobApplicationsList';
+import { JobApplicationsView } from './components/JobApplicationsView';
 import './components/JobApplications.css';
 
 // Create a client
@@ -16,7 +16,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="App">
-        <JobApplicationsList />
+        <JobApplicationsView />
       </div>
     </QueryClientProvider>
   );

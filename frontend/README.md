@@ -1,16 +1,19 @@
 # Job Applications Frontend
 
-A modern React TypeScript frontend application for managing job applications, built with Vite and integrated with a Go REST API backend.
+A modern React TypeScript frontend application for managing job applications with a kanban-style board interface, built with Vite and integrated with a Go REST API backend.
 
 ## Features
 
-- 📝 Create, read, update, and delete job applications
+- � **Kanban Board View** - Drag and drop job applications between status columns (Applied, Interview, Rejected, Ghosted)
+- �📝 Create, read, update, and delete job applications
 - 🏢 Track company, position, job links, status, and notes
-- 📊 Visual status indicators (Applied, Interviewing, Offer, Rejected, Withdrawn)
+- 📊 Visual status indicators with color-coded columns
 - 🔄 Real-time data synchronization with backend API
 - 📱 Responsive design for desktop and mobile
+- 🔀 Toggle between Kanban and List views
 - ⚡ Fast development and build times with Vite
 - 🔧 TypeScript for type safety
+- 🎯 Drag-and-drop functionality with @dnd-kit
 
 ## Tech Stack
 
@@ -19,7 +22,9 @@ A modern React TypeScript frontend application for managing job applications, bu
 - **Vite** - Build tool and dev server
 - **React Query** - Data fetching and caching
 - **Axios** - HTTP client
-- **CSS Modules** - Styling
+- **@dnd-kit** - Drag and drop functionality
+- **Bootstrap 5** - UI components and styling
+- **Bootstrap Icons** - Icons
 
 ## Prerequisites
 
@@ -75,13 +80,39 @@ src/
 └── App.tsx             # Main app component
 ```
 
+## Kanban Board Features
+
+### Drag and Drop
+- **Drag cards** between columns to update application status
+- **Visual feedback** during drag operations with rotation and shadow effects
+- **Smooth animations** for card movements and transitions
+
+### Status Columns
+- **Applied** - Newly submitted applications (Blue)
+- **Interview** - Applications in interview process (Orange) 
+- **Rejected** - Applications that were declined (Red)
+- **Ghosted** - Applications with no response (Gray)
+
+### View Modes
+- **Kanban View** - Visual board with drag-and-drop columns
+- **List View** - Traditional card-based list layout
+- **Toggle** between views using the header buttons
+
+### Real-time Updates
+- Status changes via drag-and-drop automatically sync with the backend
+- Card counts update in real-time for each column
+- Error handling for failed drag operations
+
 ## Usage
 
 1. **Adding Applications**: Click "Add New Application" to create a new job application entry
-2. **Viewing Applications**: All applications are displayed in a card layout with status indicators
-3. **Editing Applications**: Click "Edit" on any application card to modify details
-4. **Deleting Applications**: Click "Delete" to remove an application (with confirmation)
-5. **Status Tracking**: Applications are color-coded by status for easy visual management
+2. **Kanban View**: 
+   - Drag cards between columns to change status
+   - View organized columns by application status
+   - See application counts in column headers
+3. **List View**: Traditional card layout with edit/delete buttons
+4. **Editing Applications**: Click the dropdown menu on cards or "Edit" button to modify details
+5. **Deleting Applications**: Use the dropdown menu to delete applications (with confirmation)
 
 ## Development
 

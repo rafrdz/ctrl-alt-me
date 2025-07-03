@@ -59,19 +59,7 @@ export const JobApplicationsList: React.FC = () => {
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-        <h1 className="text-dark mb-0">Job Applications</h1>
-        <button 
-          onClick={handleCreateNew}
-          className="btn btn-primary"
-          disabled={showCreateForm || !!editingApplication}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          Add New Application
-        </button>
-      </div>
-
+    <div>
       {(showCreateForm || editingApplication) && (
         <div className="card mb-4">
           <div className="card-body">
@@ -83,6 +71,17 @@ export const JobApplicationsList: React.FC = () => {
           </div>
         </div>
       )}
+
+      <div className="d-flex justify-content-end mb-3">
+        <button 
+          onClick={handleCreateNew}
+          className="btn btn-primary"
+          disabled={showCreateForm || !!editingApplication}
+        >
+          <i className="bi bi-plus-circle me-2"></i>
+          Add New Application
+        </button>
+      </div>
 
       <div className="row g-3">
         {applications && applications.length > 0 ? (
