@@ -7,7 +7,7 @@ import (
 	"github.com/rafrdz/ctrl-alt-me/internal/service"
 )
 
-func NewServer(appService *service.JobApplicationService, logger *slog.Logger, frontendPort string) http.Handler {
+func NewServer(appService *service.JobApplicationService, logger *slog.Logger, frontendHost, frontendPort string) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("/ping", handlePing(logger))
@@ -19,5 +19,5 @@ func NewServer(appService *service.JobApplicationService, logger *slog.Logger, f
 	mux.Handle("POST /job-applications/import", handleCSVUpload(appService, logger))
 
 	// Wrap the mux with CORS middleware
-	return corsMiddleware(mux, frontendPort)
+	return corsMiddleware(mux, frontendHost, frontendPort)
 }

@@ -14,14 +14,16 @@ import (
 )
 
 const (
-	DEFAULT_PORT          = "3000"
-	DEFAULT_VITE_PORT     = "5173"
+	DEFAULT_BACKEND_PORT  = "3000"
+	DEFAULT_FRONTEND_PORT = "5173"
 	DEFAULT_DATABASE_NAME = "job_applications.db"
+	DEFAULT_FRONTEND_HOST = "localhost"
 )
 
 type Config struct {
 	Port         string
-	VitePort     string
+	FrontendHost string
+	FrontendPort string
 	DatabaseName string
 }
 
@@ -32,7 +34,7 @@ func main() {
 
 	// Load environment variables
 	config := createConfig(logger)
-	logger.Debug("Environment variables loaded", "port", config.Port, "frontendPort", config.VitePort, "databaseName", config.DatabaseName)
+	logger.Debug("Environment variables loaded", "port", config.Port, "frontendHost", config.FrontendHost, "frontendPort", config.FrontendPort, "databaseName", config.DatabaseName)
 
 	// Initialize the database
 	db, err := database.InitDB(config.DatabaseName, logger)
@@ -45,7 +47,7 @@ func main() {
 	logger.Info("Application service initialized")
 
 	// Set up the server
-	server := server.NewServer(appService, logger, config.VitePort)
+	server := server.NewServer(appService, logger, config.FrontendHost, config.FrontendPort)
 	logger.Debug("Server is running", "port", config.Port)
 	if err := http.ListenAndServe(":"+config.Port, server); err != nil {
 		logger.Error("Failed to start server", "error", err)
@@ -65,16 +67,19 @@ func main() {
 }
 
 func createConfig(logger *slog.Logger) *Config {
-	// Load environment variables
+	// Load environment variables in development mode
+	// In production, these should be set in the environment or Docker container
+	// Use godotenv to load .env file if it exists
 	err := godotenv.Load()
 	if err != nil {
 		logger.Error("Error loading .env file, using default values")
 	}
 
 	return &Config{
-		Port:         getEnvDefault("PORT", DEFAULT_PORT),
-		VitePort:     getEnvDefault("VITE_PORT", DEFAULT_VITE_PORT),
+		Port:         getEnvDefault("BACKEND_PORT", DEFAULT_BACKEND_PORT),
+		FrontendPort: getEnvDefault("FRONTEND_PORT", DEFAULT_FRONTEND_PORT),
 		DatabaseName: getEnvDefault("DATABASE_NAME", DEFAULT_DATABASE_NAME),
+		FrontendHost: getEnvDefault("FRONTEND_HOST", DEFAULT_FRONTEND_HOST),
 	}
 }
 

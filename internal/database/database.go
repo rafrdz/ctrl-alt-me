@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"log/slog"
+	"os"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -27,11 +29,18 @@ const DeleteStmt = `DELETE FROM job_applications WHERE id = ?`
 const ImportStmt = `INSERT INTO job_applications (company, position, link, status, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)`
 
 func InitDB(dbName string, logger *slog.Logger) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dbName)
+	// Create the data directory if it doesn't exist
+	if err := os.MkdirAll("data", 0755); err != nil {
+		return nil, err
+	}
+
+	dbPath := filepath.Join("data", dbName)
+
+	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("Database connection initialized", "driver", "sqlite3", "database", dbName)
+	logger.Info("Database connection initialized", "driver", "sqlite3", "database", dbPath)
 
 	stmt, err := db.Prepare(CreateTable)
 	if err != nil {
