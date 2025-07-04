@@ -1,8 +1,7 @@
 import axios from 'axios';
 import type { JobApplication, NewJobApplication } from '../types/jobApplication';
-import config from '../config/environment';
 
-const API_BASE_URL = config.apiUrl
+const API_BASE_URL = import.meta.env.API_URL || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
