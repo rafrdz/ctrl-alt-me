@@ -39,3 +39,6 @@ logs/
 
 # Data directory
 data/
+
+# MacOS specific files
+.DS_Store
