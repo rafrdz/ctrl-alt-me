@@ -14,15 +14,17 @@ import (
 )
 
 const (
-	DEFAULT_PORT          = "3000"
-	DEFAULT_VITE_PORT     = "5173"
-	DEFAULT_DATABASE_NAME = "job_applications.db"
+	DefaultBackendPort  = "3000"
+	DefaultFrontendPort = "5173"
+	DefaultDatabaseName = "job_applications.db"
+	DefaultFrontendHost = "localhost"
 )
 
 type Config struct {
 	Port         string
-	VitePort     string
+	FrontendPort string
 	DatabaseName string
+	FrontendHost string
 }
 
 func main() {
@@ -32,7 +34,7 @@ func main() {
 
 	// Load environment variables
 	config := createConfig(logger)
-	logger.Debug("Environment variables loaded", "port", config.Port, "frontendPort", config.VitePort, "databaseName", config.DatabaseName)
+	logger.Debug("Environment variables loaded", "port", config.Port, "frontendPort", config.FrontendPort, "frontendHost", config.FrontendHost, "databaseName", config.DatabaseName)
 
 	// Initialize the database
 	db, err := database.InitDB(config.DatabaseName, logger)
@@ -44,17 +46,17 @@ func main() {
 	appService := service.NewJobApplicationService(db, logger)
 	logger.Info("Application service initialized")
 
-	// Set up the server
-	server := server.NewServer(appService, logger, config.VitePort)
+	// Set up the httpServer
+	httpServer := server.NewServer(appService, logger, config.FrontendHost, config.FrontendPort)
 	logger.Debug("Server is running", "port", config.Port)
-	if err := http.ListenAndServe(":"+config.Port, server); err != nil {
-		logger.Error("Failed to start server", "error", err)
+	if err := http.ListenAndServe(":"+config.Port, httpServer); err != nil {
+		logger.Error("Failed to start httpServer", "error", err)
 	}
 
 	// TODO: Correctly handle graceful shutdown
 	logger.Debug("Server is stopping")
 	if err := http.ListenAndServe(":"+config.Port, nil); err != nil {
-		logger.Error("Error during server shutdown", "error", err)
+		logger.Error("Error during httpServer shutdown", "error", err)
 	}
 	logger.Debug("Server stopped gracefully")
 
@@ -65,16 +67,16 @@ func main() {
 }
 
 func createConfig(logger *slog.Logger) *Config {
-	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
 		logger.Error("Error loading .env file, using default values")
 	}
 
 	return &Config{
-		Port:         getEnvDefault("PORT", DEFAULT_PORT),
-		VitePort:     getEnvDefault("VITE_PORT", DEFAULT_VITE_PORT),
-		DatabaseName: getEnvDefault("DATABASE_NAME", DEFAULT_DATABASE_NAME),
+		Port:         getEnvDefault("BACKEND_PORT", DefaultBackendPort),
+		FrontendPort: getEnvDefault("FRONTEND_PORT", DefaultFrontendPort),
+		DatabaseName: getEnvDefault("DATABASE_NAME", DefaultDatabaseName),
+		FrontendHost: getEnvDefault("FRONTEND_HOST", DefaultFrontendHost),
 	}
 }
 

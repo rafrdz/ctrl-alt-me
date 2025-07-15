@@ -26,6 +26,7 @@ go.work.sum
 
 # env file
 .env
+.env.*
 
 # Editor/IDE
 .idea/
@@ -35,3 +36,13 @@ go.work.sum
 
 # Log files
 logs/
+
+# Data directory
+data/
+
+# MacOS specific files
+.DS_Store
+
+# Bin
+bin/
+

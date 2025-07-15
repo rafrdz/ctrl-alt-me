@@ -1,0 +1,51 @@
+#!/bin/bash
+
+set -e
+
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <path_to_database_file> <database_name> <dump_format (sql|csv)>"
+    exit 1
+fi
+
+DATABASE_FILE="$1"
+DATABASE_NAME="$2"
+DUMP_FORMAT="${3}"
+
+# Verify the dump format
+if [[ "$DUMP_FORMAT" != "sql" && "$DUMP_FORMAT" != "csv" ]]; then
+    echo "Invalid dump format specified. Use 'sql' or 'csv'."
+    exit 1
+fi
+
+if ! command -v sqlite3 &> /dev/null; then
+    echo "sqlite3 is not installed. Please install it to run this script."
+    exit 1
+fi
+
+echo "Dumping database '$DATABASE_NAME' from file '$DATABASE_FILE' in format '$DUMP_FORMAT'..."
+
+if [ ! -f "$DATABASE_FILE" ]; then
+    echo "Database file '$DATABASE_FILE' does not exist."
+    exit 1
+fi
+
+if [ "$DUMP_FORMAT" == "csv" ]; then
+    DUMP_FILE="${DATABASE_NAME}_dump.csv"
+    sqlite3 -header -csv "$DATABASE_FILE" "SELECT * FROM $DATABASE_NAME;" > "$DUMP_FILE"
+    if [ $? -eq 0 ]; then
+        echo "Database dump successful. Dump file created: $DUMP_FILE"
+    else
+        echo "Failed to create database dump."
+        exit 1
+    fi
+    exit 0
+else
+    DUMP_FILE="${DATABASE_NAME}_dump.sql"
+    sqlite3 "$DATABASE_FILE" .dump > "$DUMP_FILE"
+    if [ $? -eq 0 ]; then
+        echo "Database dump successful. Dump file created: $DUMP_FILE"
+    else
+        echo "Failed to create database dump."
+        exit 1
+    fi
+fi

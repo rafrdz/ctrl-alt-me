@@ -7,10 +7,16 @@ export default defineConfig({
   plugins: [react()],
   envDir: path.resolve(__dirname, '..'), // Load .env from project root
   server: {
-    port: parseInt(process.env.VITE_PORT || '5173'),
+    port: parseInt(process.env.FRONTEND_PORT || '5173'),
     host: true,
+    strictPort: true,
+  },
+  preview: {
+    port: 8080,
+    host: '0.0.0.0',
+    strictPort: true,
   },
   define: {
-    'process.env.API_URL': JSON.stringify(process.env.API_URL),
+    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
   },
 })

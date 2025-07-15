@@ -16,11 +16,11 @@ This is a React TypeScript frontend application built with Vite that interacts w
 ## API Integration
 - Base API URL: http://localhost:3000
 - Endpoints:
-  - GET /job-applications - List all applications
-  - POST /job-applications - Create new application
-  - GET /job-applications/{id} - Get application by ID
-  - PUT /job-applications - Update application
-  - DELETE /job-applications/{id} - Delete application
+  - GET /api/job-applications - List all applications
+  - POST /api/job-applications - Create new application
+  - GET /api/job-applications/{id} - Get application by ID
+  - PUT /api/job-applications - Update application
+  - DELETE /api/job-applications/{id} - Delete application
 
 ## Code Style
 - Use TypeScript for all components and services
