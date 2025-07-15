@@ -67,9 +67,6 @@ func main() {
 }
 
 func createConfig(logger *slog.Logger) *Config {
-	// Load environment variables in development mode
-	// In production, these should be set in the environment or Docker container
-	// Use godotenv to load .env file if it exists
 	err := godotenv.Load()
 	if err != nil {
 		logger.Error("Error loading .env file, using default values")
