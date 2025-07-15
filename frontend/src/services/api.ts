@@ -13,31 +13,31 @@ const api = axios.create({
 export const jobApplicationsApi = {
   // Get all job applications
   getAll: async (): Promise<JobApplication[]> => {
-    const response = await api.get('/job-applications');
+    const response = await api.get('/api/job-applications');
     return response.data;
   },
 
   // Get job application by ID
   getById: async (id: number): Promise<JobApplication> => {
-    const response = await api.get(`/job-applications/${id}`);
+    const response = await api.get(`/api/job-applications/${id}`);
     return response.data;
   },
 
   // Create new job application
   create: async (application: NewJobApplication): Promise<JobApplication> => {
-    const response = await api.post('/job-applications', application);
+    const response = await api.post('/api/job-applications', application);
     return response.data;
   },
 
   // Update job application
   update: async (application: JobApplication): Promise<JobApplication> => {
-    const response = await api.put('/job-applications', application);
+    const response = await api.put('/api/job-applications', application);
     return response.data;
   },
 
   // Delete job application
   delete: async (id: number): Promise<void> => {
-    await api.delete(`/job-applications/${id}`);
+    await api.delete(`/api/job-applications/${id}`);
   },
 
   // Import job applications from CSV

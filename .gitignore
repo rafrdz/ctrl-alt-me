@@ -42,3 +42,7 @@ data/
 
 # MacOS specific files
 .DS_Store
+
+# Bin
+bin/
+
