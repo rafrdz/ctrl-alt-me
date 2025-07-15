@@ -1,5 +1,5 @@
 MAIN_PACKAGE_PATH := ./cmd/api
-BINARY_NAME := ctrl-alt-me-api
+BINARY_NAME := api
 BIN_DIR := bin
 LOGS_DIR := logs
 DATA_DIR := data
