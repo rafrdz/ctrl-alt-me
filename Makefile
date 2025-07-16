@@ -1,20 +1,20 @@
 MAIN_PACKAGE_PATH := ./cmd/api
-BINARY_NAME := ctrl-alt-me-api
+BINARY_NAME := api
 BIN_DIR := bin
 LOGS_DIR := logs
 DATA_DIR := data
 FRONTEND_DIR := frontend
 
-.PHONY: build
-build: build-frontend
+.PHONY: build-backend
+build-backend:
 	go build -o ${BIN_DIR}/${BINARY_NAME} ${MAIN_PACKAGE_PATH}
 
 .PHONY: build-frontend
 build-frontend:
 	cd ${FRONTEND_DIR} && npm install && npm run build
 
-.PHONY: build-production
-build-production: build-frontend
+.PHONY: build
+build: build-frontend
 	go build -o ${BIN_DIR}/${BINARY_NAME} ${MAIN_PACKAGE_PATH}
 
 .PHONY: run-backend
