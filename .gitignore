@@ -46,3 +46,5 @@ data/
 # Bin
 bin/
 
+# Misc
+scripts/scp
