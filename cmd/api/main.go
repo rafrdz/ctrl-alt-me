@@ -69,7 +69,8 @@ func main() {
 func createConfig(logger *slog.Logger) *Config {
 	err := godotenv.Load()
 	if err != nil {
-		logger.Error("Error loading .env file, using default values")
+		// Unable to load .env file, check for env variables or use defaults
+		logger.Error("Error loading .env file, using env or default values")
 	}
 
 	return &Config{

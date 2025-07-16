@@ -1,0 +1,16 @@
+services:
+  ctrl-alt-me:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT}:8080"
+    environment:
+      - BACKEND_PORT=${BACKEND_PORT}
+      - FRONTEND_HOST=${FRONTEND_HOST}
+      - FRONTEND_PORT=${FRONTEND_PORT}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - VITE_API_URL=${VITE_API_URL}
+    volumes:
+      - ./app-data:/app/data
+    command: ["/app/bin/api"]
