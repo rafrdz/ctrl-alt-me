@@ -22,5 +22,7 @@ This application has been built as a hobby project to run on a Raspberry Pi and 
 
 1. Clone the repo
 1. Create a `.env.` file (see `.env.example` for more information)
+1. Install dependencies
+   - For the frontend, run `make build-frontend`
 1. Run the application in `dev` mode using `make run-dev`
    - This will run both the frontend and backend services
