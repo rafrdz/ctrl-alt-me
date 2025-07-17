@@ -8,7 +8,7 @@ import (
 	"github.com/rafrdz/ctrl-alt-me/internal/service"
 )
 
-func NewServer(appService *service.JobApplicationService, logger *slog.Logger, frontendHost, frontendPort string) http.Handler {
+func NewHTTPHandler(appService *service.JobApplicationService, logger *slog.Logger, frontendHost, frontendPort string) http.Handler {
 	mux := http.NewServeMux()
 
 	// API routes

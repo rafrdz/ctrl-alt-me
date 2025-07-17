@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -30,40 +34,85 @@ type Config struct {
 func main() {
 	// Configure the logger
 	logger, logFile := configureLogger()
-	defer logFile.Close() // Close the log file when main() exits
+	defer logFile.Close()
 
 	// Load environment variables
 	config := createConfig(logger)
 	logger.Debug("Environment variables loaded", "port", config.Port, "frontendPort", config.FrontendPort, "frontendHost", config.FrontendHost, "databaseName", config.DatabaseName)
 
-	// Initialize the database
+	// Open connection to the database, this will be closed during graceful shutdown
 	db, err := database.InitDB(config.DatabaseName, logger)
 	if err != nil {
 		logger.Error("Failed to initialize database", "error", err)
+		os.Exit(1)
 	}
-	defer db.Close()
 
 	appService := service.NewJobApplicationService(db, logger)
 	logger.Info("Application service initialized")
 
 	// Set up the httpServer
-	httpServer := server.NewServer(appService, logger, config.FrontendHost, config.FrontendPort)
-	logger.Debug("Server is running", "port", config.Port)
-	if err := http.ListenAndServe(":"+config.Port, httpServer); err != nil {
-		logger.Error("Failed to start httpServer", "error", err)
+	handler := server.NewHTTPHandler(appService, logger, config.FrontendHost, config.FrontendPort)
+	httpServer := &http.Server{
+		Addr:         ":" + config.Port,
+		Handler:      handler,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
 	}
 
-	// TODO: Correctly handle graceful shutdown
-	logger.Debug("Server is stopping")
-	if err := http.ListenAndServe(":"+config.Port, nil); err != nil {
-		logger.Error("Error during httpServer shutdown", "error", err)
-	}
-	logger.Debug("Server stopped gracefully")
+	// Start the HTTP httpServer and listen for termination signals
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	// Close the database connection
+	// Channel to communicate server startup errors
+	serverErrors := make(chan error, 1)
+
+	go func() {
+		logger.Info("Starting HTTP server", "addr", httpServer.Addr)
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("Failed to start HTTP server", "error", err)
+			serverErrors <- err
+		}
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+	logger.Info("HTTP server started successfully", "port", config.Port)
+
+	// Wait for either shutdown signal or server error
+	select {
+	case <-ctx.Done():
+		logger.Info("Received shutdown signal, stopping HTTP server...", "signal", ctx.Err())
+	case err := <-serverErrors:
+		logger.Error("Server failed to start", "error", err)
+		if err := db.Close(); err != nil {
+			logger.Error("Failed to close database during error cleanup", "error", err)
+		}
+		os.Exit(1)
+	}
+
+	// Graceful shutdown sequence
+	stop()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	logger.Info("Shutting down HTTP server...")
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Error during HTTP server shutdown", "error", err)
+		// Force close if graceful shutdown fails
+		if closeErr := httpServer.Close(); closeErr != nil {
+			logger.Error("Error during HTTP server force close", "error", closeErr)
+		}
+	} else {
+		logger.Info("HTTP server shutdown gracefully")
+	}
+
+	logger.Info("Closing database connection...")
 	if err := db.Close(); err != nil {
 		logger.Error("Failed to close database", "error", err)
+	} else {
+		logger.Info("Database connection closed")
 	}
+
+	logger.Info("Application shutdown complete")
 }
 
 func createConfig(logger *slog.Logger) *Config {
