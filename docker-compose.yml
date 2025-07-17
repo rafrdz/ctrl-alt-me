@@ -13,4 +13,5 @@ services:
       - VITE_API_URL=${VITE_API_URL}
     volumes:
       - ./app-data:/app/data
+      - ./app-logs:/app/logs
     command: ["/app/bin/api"]

@@ -48,3 +48,4 @@ bin/
 
 # Misc
 scripts/scp
+app-logs/
