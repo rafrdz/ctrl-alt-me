@@ -1,25 +1,25 @@
 import React from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { CSVImport } from './CSVImport';
+import { CSVExport } from './CSVExport';
 import { useTheme } from '../contexts/ThemeContext';
+import type { JobApplication } from '../types/jobApplication';
 import './Header.css';
 
-type ViewMode = 'kanban' | 'list';
-
 interface HeaderProps {
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
   onAddNew: () => void;
   onImportSuccess?: () => void;
   isFormOpen: boolean;
+  applications?: JobApplication[];
+  exportFilename?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  viewMode,
-  onViewModeChange,
   onAddNew,
   onImportSuccess,
   isFormOpen,
+  applications,
+  exportFilename,
 }) => {
   const { theme } = useTheme();
 
@@ -52,34 +52,6 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Collapsible content */}
         <div className="collapse navbar-collapse" id="navbarContent">
           <div className="navbar-nav ms-auto d-flex align-items-center">
-            {/* View Mode Toggle */}
-            <div className="nav-item me-3">
-              <div className="btn-group" role="group" aria-label="View mode">
-                <button
-                  type="button"
-                  className={`btn btn-sm ${
-                    viewMode === 'list' ? 'btn-primary' : 'btn-outline-primary'
-                  }`}
-                  onClick={() => onViewModeChange('list')}
-                  disabled={isFormOpen}
-                >
-                  <i className="bi bi-list-ul me-1"></i>
-                  <span className="d-none d-sm-inline">List</span>
-                </button>
-                <button
-                  type="button"
-                  className={`btn btn-sm ${
-                    viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-primary'
-                  }`}
-                  onClick={() => onViewModeChange('kanban')}
-                  disabled={isFormOpen}
-                >
-                  <i className="bi bi-kanban me-1"></i>
-                  <span className="d-none d-sm-inline">Kanban</span>
-                </button>
-              </div>
-            </div>
-
             {/* Add New Button */}
             <div className="nav-item me-3">
               <button
@@ -98,6 +70,15 @@ export const Header: React.FC<HeaderProps> = ({
               <CSVImport
                 onImportSuccess={onImportSuccess}
                 disabled={isFormOpen}
+              />
+            </div>
+
+            {/* CSV Export */}
+            <div className="nav-item me-3">
+              <CSVExport
+                applications={applications || []}
+                disabled={isFormOpen}
+                filename={exportFilename}
               />
             </div>
 
