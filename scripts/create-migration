@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Create a database migration using golang-migrate
+# Make sure you have golang-migrate installed: https://github.com/golang-migrate/migrate/tree/master/cmd/migrate#installation
+
+set -e
+
+# Ensure migrate is installed
+if ! command -v migrate &> /dev/null
+then
+    echo "migrate could not be found, please install it first."
+    exit
+fi
+
+MIGRATION_NAME="$*"
+
+if [ -z "$MIGRATION_NAME" ]; then
+    echo "Usage: $0 <migration_name>"
+    exit 1
+fi
+
+MIGRATION_NAME=$(echo "$MIGRATION_NAME" | tr ' ' '_' | tr '[:upper:]' '[:lower:]')
+
+echo "Creating migration: $MIGRATION_NAME"
+
+migrate create -ext sql -dir internal/database/migrations -seq "$MIGRATION_NAME"
+
+echo "Edit the generated .up.sql and .down.sql files to define your migration."

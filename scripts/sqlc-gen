@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Generate database code using sqlc
+# Make sure you have sqlc installed: https://docs.sqlc.dev/en/stable/overview/install.html
+
+set -e
+
+if ! command -v sqlc &> /dev/null
+then
+    echo "sqlc could not be found, please install it first."
+    exit
+fi
+
+cd internal/database || { echo "Directory internal/database does not exist."; exit 1; }
+
+sqlc generate
+
+if [ $? -ne 0 ]; then
+    echo "sqlc generate failed."
+    exit 1
+fi

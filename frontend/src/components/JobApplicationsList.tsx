@@ -22,7 +22,7 @@ export const JobApplicationsList: React.FC<JobApplicationsListProps> = ({
   const [internalShowCreateForm, setInternalShowCreateForm] = useState(false);
   const showCreateForm = externalShowCreateForm || internalShowCreateForm;
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this job application?')) {
       try {
         await deleteMutation.mutateAsync(id);
@@ -101,8 +101,11 @@ export const JobApplicationsList: React.FC<JobApplicationsListProps> = ({
                   <span className={`badge ${
                     application.status === 'applied' ? 'bg-primary' :
                     application.status === 'interview' ? 'bg-warning' :
-                    application.status === 'offer' ? 'bg-success' :
+                    application.status === 'offer' ? 'bg-info' :
+                    application.status === 'accepted' ? 'bg-success' :
                     application.status === 'rejected' ? 'bg-danger' :
+                    application.status === 'withdrawn' ? 'bg-secondary' :
+                    application.status === 'ghosted' ? 'bg-dark' :
                     'bg-secondary'
                   }`}>
                     {application.status.charAt(0).toUpperCase() + application.status.slice(1)}

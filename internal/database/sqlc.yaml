@@ -1,0 +1,11 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "schema/schema.sql"
+    queries: "queries"
+    database:
+      uri: "postgresql://rafael:secret@localhost:5432/ctrl_alt_me?sslmode=disable"
+    gen:
+      go:
+        package: "database"
+        out: "."

@@ -13,31 +13,31 @@ const api = axios.create({
 export const jobApplicationsApi = {
   // Get all job applications
   getAll: async (): Promise<JobApplication[]> => {
-    const response = await api.get('/api/job-applications');
+    const response = await api.get('/api/v1/job-applications');
     return response.data;
   },
 
   // Get job application by ID
-  getById: async (id: number): Promise<JobApplication> => {
-    const response = await api.get(`/api/job-applications/${id}`);
+  getById: async (id: string): Promise<JobApplication> => {
+    const response = await api.get(`/api/v1/job-applications/${id}`);
     return response.data;
   },
 
   // Create new job application
   create: async (application: NewJobApplication): Promise<JobApplication> => {
-    const response = await api.post('/api/job-applications', application);
+    const response = await api.post('/api/v1/job-applications', application);
     return response.data;
   },
 
   // Update job application
   update: async (application: JobApplication): Promise<JobApplication> => {
-    const response = await api.put('/api/job-applications', application);
+    const response = await api.put(`/api/v1/job-applications/${application.id}`, application);
     return response.data;
   },
 
   // Delete job application
-  delete: async (id: number): Promise<void> => {
-    await api.delete(`/api/job-applications/${id}`);
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/api/v1/job-applications/${id}`);
   },
 
   // Import job applications from CSV
@@ -46,7 +46,7 @@ export const jobApplicationsApi = {
     formData.append('file', file);
 
     // Use fetch instead of axios for file upload to avoid content-type issues
-    const response = await fetch(`${API_BASE_URL}/job-applications/import`, {
+    const response = await fetch('/api/v1/job-applications/import', {
       method: 'POST',
       body: formData,
       // Don't set Content-Type header - let browser set it with boundary for FormData

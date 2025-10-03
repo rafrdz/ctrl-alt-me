@@ -19,8 +19,11 @@ import './KanbanBoard.css';
 const COLUMNS: { id: JobApplicationStatus; title: string; bgColor: string }[] = [
   { id: 'applied', title: 'Applied', bgColor: 'bg-primary' },
   { id: 'interview', title: 'Interview', bgColor: 'bg-warning' },
+  { id: 'offer', title: 'Offer', bgColor: 'bg-info' },
+  { id: 'accepted', title: 'Accepted', bgColor: 'bg-success' },
   { id: 'rejected', title: 'Rejected', bgColor: 'bg-danger' },
-  { id: 'ghosted', title: 'Ghosted', bgColor: 'bg-secondary' },
+  { id: 'withdrawn', title: 'Withdrawn', bgColor: 'bg-secondary' },
+  { id: 'ghosted', title: 'Ghosted', bgColor: 'bg-dark' },
 ];
 
 interface KanbanBoardProps {
@@ -64,7 +67,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const application = applications?.find(app => app.id === Number(active.id));
+    const application = applications?.find(app => app.id === String(active.id));
     setActiveApplication(application || null);
   };
 
@@ -74,7 +77,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
 
     if (!over || !applications) return;
 
-    const applicationId = Number(active.id);
+    const applicationId = String(active.id);
     const newStatus = over.id as JobApplicationStatus;
     
     const application = applications.find(app => app.id === applicationId);

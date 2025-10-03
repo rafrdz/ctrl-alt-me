@@ -1,24 +1,31 @@
 package service
 
 import (
+	"context"
 	"database/sql"
+	"encoding/csv"
+	"io"
 	"log/slog"
-	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rafrdz/ctrl-alt-me/internal/database"
+	"github.com/rafrdz/ctrl-alt-me/internal/helpers"
 )
 
 type JobApplicationService struct {
-	db     *sql.DB
-	logger *slog.Logger
+	db      *sql.DB
+	queries *database.Queries
 }
 
-func NewJobApplicationService(db *sql.DB, logger *slog.Logger) *JobApplicationService {
-	return &JobApplicationService{db: db, logger: logger}
+func NewJobApplicationService(db *sql.DB) *JobApplicationService {
+	return &JobApplicationService{
+		db:      db,
+		queries: database.New(db),
+	}
 }
 
-type NewJobApplication struct {
+type JobApplicationRequest struct {
 	Company  string `json:"company"`
 	Position string `json:"position"`
 	Link     string `json:"link"`
@@ -26,200 +33,314 @@ type NewJobApplication struct {
 	Notes    string `json:"notes"`
 }
 
-type NewJobApplicationResponse struct {
-	ID int64 `json:"id"`
-	NewJobApplication
+type JobApplicationResponse struct {
+	ID string `json:"id"`
+	JobApplicationRequest
 }
 
 type JobApplication struct {
-	ID int64 `json:"id"`
-	NewJobApplication
+	JobApplicationResponse
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
 
-func (s *JobApplicationService) CreateJobApplication(app NewJobApplication) (NewJobApplicationResponse, error) {
-	stmt, err := s.db.Prepare(database.InsertStmt)
-	if err != nil {
-		return NewJobApplicationResponse{}, err
-	}
-	defer stmt.Close()
+type ImportJobApplicationRequest struct {
+	JobApplicationRequest
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
 
-	res, err := stmt.Exec(app.Company, app.Position, app.Link, app.Status, app.Notes)
-	if err != nil {
-		return NewJobApplicationResponse{}, err
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		return NewJobApplicationResponse{}, err
+func (s *JobApplicationService) CreateJobApplication(ctx context.Context, app JobApplicationRequest) (JobApplicationResponse, error) {
+	params := database.CreateJobApplicationParams{
+		Company:  app.Company,
+		Position: app.Position,
+		Link:     app.Link,
+		Status:   database.JobStatus(app.Status),
+		Notes:    app.Notes,
 	}
 
-	return NewJobApplicationResponse{
-		ID:                id,
-		NewJobApplication: app,
+	result, err := s.queries.CreateJobApplication(ctx, params)
+	if err != nil {
+		slog.Error("Failed to create job application", "error", err, "company", app.Company, "position", app.Position)
+		return JobApplicationResponse{}, err
+	}
+
+	slog.Info("Job application created successfully", "id", result.ID, "company", app.Company, "position", app.Position)
+
+	return JobApplicationResponse{
+		ID:                    result.ID.String(),
+		JobApplicationRequest: app,
 	}, nil
 }
 
-func (s *JobApplicationService) GetJobApplicationByID(id string) (JobApplication, error) {
-	stmt, err := s.db.Prepare(database.SelectByIDStmt)
+func (s *JobApplicationService) GetAllJobApplications(ctx context.Context) ([]JobApplication, error) {
+	rows, err := s.queries.ListJobApplications(ctx)
 	if err != nil {
-		return JobApplication{}, err
-	}
-	defer stmt.Close()
-
-	var app JobApplication
-	err = stmt.QueryRow(id).Scan(&app.ID, &app.Company, &app.Position, &app.Link, &app.Status, &app.Notes)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return JobApplication{}, nil
-		}
-		return JobApplication{}, err
-	}
-
-	return app, nil
-}
-
-func (s *JobApplicationService) GetJobApplications() ([]JobApplication, error) {
-	stmt, err := s.db.Prepare(database.SelectAllStmt)
-	if err != nil {
+		slog.Error("Failed to retrieve job applications", "error", err)
 		return nil, err
 	}
-	defer stmt.Close()
-
-	rows, err := stmt.Query()
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 
 	var applications []JobApplication
-	for rows.Next() {
-		var app JobApplication
-		err = rows.Scan(&app.ID, &app.Company, &app.Position, &app.Link, &app.Status, &app.Notes, &app.CreatedAt, &app.UpdatedAt)
-		if err != nil {
-			return nil, err
-		}
-		applications = append(applications, app)
+	for _, row := range rows {
+		applications = append(applications, JobApplication{
+			JobApplicationResponse: JobApplicationResponse{
+				ID: row.ID.String(),
+				JobApplicationRequest: JobApplicationRequest{
+					Company:  row.Company,
+					Position: row.Position,
+					Link:     row.Link,
+					Status:   string(row.Status),
+					Notes:    row.Notes,
+				},
+			},
+			CreatedAt: row.CreatedAt.Time.Format(helpers.TimeFormat),
+			UpdatedAt: row.UpdatedAt.Time.Format(helpers.TimeFormat),
+		})
 	}
 
+	slog.Info("Retrieved job applications successfully", "count", len(applications))
 	return applications, nil
 }
 
-func (s *JobApplicationService) UpdateJobApplication(app JobApplication) (JobApplication, error) {
-	stmt, err := s.db.Prepare(database.UpdateStmt)
+func (s *JobApplicationService) GetJobApplicationByID(ctx context.Context, id string) (JobApplication, error) {
+	uuidID, err := parseUUID(id)
 	if err != nil {
 		return JobApplication{}, err
 	}
-	defer stmt.Close()
 
-	_, err = stmt.Exec(app.Company, app.Position, app.Link, app.Status, app.Notes, app.ID)
+	row, err := s.queries.GetJobApplication(ctx, uuidID)
 	if err != nil {
+		slog.Error("Failed to retrieve job application", "error", err, "id", id)
 		return JobApplication{}, err
 	}
-	return app, nil
+
+	application := JobApplication{
+		JobApplicationResponse: JobApplicationResponse{
+			ID: row.ID.String(),
+			JobApplicationRequest: JobApplicationRequest{
+				Company:  row.Company,
+				Position: row.Position,
+				Link:     row.Link,
+				Status:   string(row.Status),
+				Notes:    row.Notes,
+			},
+		},
+		CreatedAt: row.CreatedAt.Time.Format(helpers.TimeFormat),
+		UpdatedAt: row.UpdatedAt.Time.Format(helpers.TimeFormat),
+	}
+
+	slog.Info("Retrieved job application successfully", "id", id)
+	return application, nil
 }
 
-func (s *JobApplicationService) DeleteJobApplication(id string) error {
-	stmt, err := s.db.Prepare(database.DeleteStmt)
+func (s *JobApplicationService) UpdateJobApplication(ctx context.Context, id string, app JobApplicationRequest) (JobApplicationResponse, error) {
+	uuidID, err := parseUUID(id)
 	if err != nil {
-		return err
+		return JobApplicationResponse{}, err
 	}
-	defer stmt.Close()
 
-	_, err = stmt.Exec(id)
+	params := database.UpdateJobApplicationParams{
+		ID:       uuidID,
+		Company:  app.Company,
+		Position: app.Position,
+		Link:     app.Link,
+		Status:   database.JobStatus(app.Status),
+		Notes:    app.Notes,
+	}
+
+	result, err := s.queries.UpdateJobApplication(ctx, params)
+	if err != nil {
+		slog.Error("Failed to update job application", "error", err, "id", id)
+		return JobApplicationResponse{}, err
+	}
+
+	slog.Info("Job application updated successfully", "id", result.ID, "company", app.Company, "position", app.Position)
+
+	return JobApplicationResponse{
+		ID:                    result.ID.String(),
+		JobApplicationRequest: app,
+	}, nil
+}
+
+func (s *JobApplicationService) DeleteJobApplication(ctx context.Context, id string) error {
+	uuidID, err := parseUUID(id)
 	if err != nil {
 		return err
 	}
+
+	err = s.queries.DeleteJobApplication(ctx, uuidID)
+	if err != nil {
+		slog.Error("Failed to delete job application", "error", err, "id", id)
+		return err
+	}
+
+	slog.Info("Job application deleted successfully", "id", id)
 	return nil
 }
 
-func (s *JobApplicationService) ImportJobApplicationsFromCSV(records [][]string) ([]JobApplication, error) {
-	stmt, err := s.db.Prepare(database.ImportStmt)
+func parseUUID(id string) (uuid.UUID, error) {
+	uid, err := uuid.Parse(id)
 	if err != nil {
+		slog.Error("Invalid UUID format", "error", err, "id", id)
+		return uuid.Nil, err
+	}
+	return uid, nil
+}
+
+func (s *JobApplicationService) ImportJobApplicationsFromCSV(ctx context.Context, csvReader io.Reader) ([]JobApplicationResponse, error) {
+	reader := csv.NewReader(csvReader)
+	reader.FieldsPerRecord = -1
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		slog.Error("Failed to parse CSV file", "error", err)
 		return nil, err
 	}
-	defer stmt.Close()
 
-	var applications []JobApplication
-	for i, record := range records {
-		if len(record) < 4 {
-			s.logger.Warn("Skipping invalid CSV record", "row", i+1, "fields", len(record))
-			continue // Skip invalid records
-		}
-
-		// CSV format: date,company,position,link,status,notes
-		dateStr := record[0]
-		company := record[1]
-		position := record[2]
-		link := ""
-		status := "applied" // default status
-		notes := ""
-
-		if len(record) > 2 {
-			link = record[3]
-		}
-		if len(record) > 3 {
-			status = strings.ToLower(strings.TrimSpace(record[4]))
-		}
-		if len(record) > 4 {
-			notes = record[5]
-		}
-
-		// Parse the date string (YYYY-MM-DD) and convert to proper timestamp
-		var createdAt string
-		if dateStr != "" {
-			parsedDate, err := time.Parse("2006-01-02", strings.TrimSpace(dateStr))
-			if err != nil {
-				s.logger.Warn("Invalid date format, using current time", "row", i+1, "date", dateStr, "error", err)
-				createdAt = time.Now().Format(time.RFC3339Nano)
-			} else {
-				// Convert to RFC3339Nano format for consistency
-				createdAt = parsedDate.Format(time.RFC3339Nano)
-			}
-		} else {
-			// Use current time if no date provided
-			createdAt = time.Now().Format(time.RFC3339Nano)
-		}
-
-		validStatuses := map[string]bool{
-			"applied":   true,
-			"interview": true,
-			"offer":     true,
-			"rejected":  true,
-		}
-		if !validStatuses[status] {
-			s.logger.Warn("Invalid status, using default", "row", i+1, "status", status)
-			status = "applied"
-		}
-
-		app := JobApplication{
-			NewJobApplication: NewJobApplication{
-				Company:  company,
-				Position: position,
-				Link:     link,
-				Status:   status,
-				Notes:    notes,
-			},
-			CreatedAt: createdAt,
-		}
-
-		s.logger.Debug("Importing job application", "company", app.Company, "position", app.Position, "status", app.Status)
-
-		res, err := stmt.Exec(app.Company, app.Position, app.Link, app.Status, app.Notes, app.CreatedAt)
-		if err != nil {
-			s.logger.Error("Failed to insert job application", "error", err, "company", app.Company, "position", app.Position)
-			return nil, err
-		}
-
-		id, err := res.LastInsertId()
-		if err != nil {
-			return nil, err
-		}
-		app.ID = id
-
-		applications = append(applications, app)
+	if len(records) == 0 {
+		slog.Warn("CSV file is empty")
+		return nil, nil
 	}
 
-	return applications, nil
+	var jobApplications []ImportJobApplicationRequest
+	for i, record := range records[1:] { // Skip header row
+		if len(record) < 4 { // Minimum required fields: id, company, position, link
+			slog.Warn("Skipping invalid CSV row", "row", i+2, "fields", len(record))
+			continue
+		}
+
+		app := ImportJobApplicationRequest{
+			JobApplicationRequest: JobApplicationRequest{
+				Company:  record[1],
+				Position: record[2],
+			},
+		}
+
+		// Handle optional fields
+		if len(record) > 3 && record[3] != "" {
+			app.Link = record[3] // link
+		}
+
+		if len(record) > 4 && record[4] != "" {
+			app.Status = record[4] // status
+		} else {
+			app.Status = "applied" // default status
+		}
+
+		if len(record) > 5 && record[5] != "" {
+			app.Notes = record[5] // notes
+		}
+
+		if len(record) > 6 && record[6] != "" {
+			createdAt, err := helpers.StringToSQLNullTime(record[6]) // created_at
+			if err != nil {
+				slog.Warn("Invalid created_at format, using current time", "row", i+2, "value", record[6], "error", err)
+				createdAt = sql.NullTime{Time: time.Now()}
+			}
+			app.CreatedAt = createdAt.Time.Format(helpers.TimeFormat)
+		} else {
+			app.CreatedAt = time.Now().Format(helpers.TimeFormat)
+		}
+
+		if len(record) > 7 && record[7] != "" {
+			updatedAt, err := helpers.StringToSQLNullTime(record[7]) // updated_at
+			if err != nil {
+				slog.Warn("Invalid updated_at format, using current time", "row", i+2, "value", record[7], "error", err)
+				updatedAt = sql.NullTime{Time: time.Now()}
+			}
+			app.UpdatedAt = updatedAt.Time.Format(helpers.TimeFormat)
+		} else {
+			app.UpdatedAt = time.Now().Format(helpers.TimeFormat)
+		}
+
+		if app.Company == "" || app.Position == "" {
+			slog.Warn("Skipping row with missing required fields",
+				"row", i+2,
+				"company", app.Company,
+				"position", app.Position)
+			continue
+		}
+
+		jobApplications = append(jobApplications, app)
+	}
+
+	if len(jobApplications) == 0 {
+		slog.Warn("No valid job applications found in CSV")
+		return nil, nil
+	}
+
+	slog.Info("Parsed job applications from CSV", "count", len(jobApplications))
+
+	return s.ImportJobApplications(ctx, jobApplications)
+}
+
+func (s *JobApplicationService) ImportJobApplications(ctx context.Context, apps []ImportJobApplicationRequest) ([]JobApplicationResponse, error) {
+	var importedApps []JobApplicationResponse
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		slog.Error("Failed to begin transaction for importing job applications", "error", err)
+		return nil, err
+	}
+
+	q := s.queries.WithTx(tx)
+
+	for _, app := range apps {
+		createdAt, err := helpers.StringToSQLNullTime(app.CreatedAt)
+		if err != nil {
+			slog.Error("Failed to parse created_at timestamp", "error", err, "value", app.CreatedAt)
+			if rbErr := tx.Rollback(); rbErr != nil {
+				slog.Error("Failed to rollback transaction after timestamp parse failure", "error", rbErr)
+			}
+			return nil, err
+		}
+
+		updatedAt, err := helpers.StringToSQLNullTime(app.UpdatedAt)
+		if err != nil {
+			slog.Error("Failed to parse updated_at timestamp", "error", err, "value", app.UpdatedAt)
+			if rbErr := tx.Rollback(); rbErr != nil {
+				slog.Error("Failed to rollback transaction after timestamp parse failure", "error", rbErr)
+			}
+			return nil, err
+		}
+
+		params := database.ImportJobApplicationFromCSVParams{
+			Company:   app.Company,
+			Position:  app.Position,
+			Link:      app.Link,
+			Status:    database.JobStatus(app.Status),
+			Notes:     app.Notes,
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+		}
+
+		result, err := q.ImportJobApplicationFromCSV(ctx, params)
+		if err != nil {
+			slog.Error("Failed to import job application", "error", err, "company", app.Company, "position", app.Position)
+			if rbErr := tx.Rollback(); rbErr != nil {
+				slog.Error("Failed to rollback transaction after import failure", "error", rbErr)
+			}
+			return nil, err
+		}
+
+		importedApps = append(importedApps, JobApplicationResponse{
+			ID: result.ID.String(),
+			JobApplicationRequest: JobApplicationRequest{
+				Company:  app.Company,
+				Position: app.Position,
+				Link:     app.Link,
+				Status:   app.Status,
+				Notes:    app.Notes,
+			},
+		})
+		slog.Info("Imported job application successfully", "id", result.ID, "company", app.Company, "position", app.Position)
+	}
+
+	if err := tx.Commit(); err != nil {
+		slog.Error("Failed to commit transaction for importing job applications", "error", err)
+		return nil, err
+	}
+
+	slog.Info("Imported job applications successfully", "count", len(importedApps))
+	return importedApps, nil
 }

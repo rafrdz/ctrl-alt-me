@@ -13,8 +13,11 @@ interface JobApplicationFormProps {
 const statusOptions: JobApplicationStatus[] = [
   'applied',
   'interview',
+  'offer',
   'rejected',
+  'withdrawn',
   'ghosted',
+  'accepted',
 ];
 
 export const JobApplicationForm: React.FC<JobApplicationFormProps> = ({

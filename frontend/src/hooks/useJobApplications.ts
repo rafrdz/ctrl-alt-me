@@ -5,7 +5,7 @@ import type { JobApplication, NewJobApplication } from '../types/jobApplication'
 // Query keys
 export const QUERY_KEYS = {
   jobApplications: ['jobApplications'] as const,
-  jobApplication: (id: number) => ['jobApplications', id] as const,
+  jobApplication: (id: string) => ['jobApplications', id] as const,
 };
 
 // Get all job applications
@@ -18,7 +18,7 @@ export const useJobApplications = () => {
 };
 
 // Get job application by ID
-export const useJobApplication = (id: number) => {
+export const useJobApplication = (id: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.jobApplication(id),
     queryFn: () => jobApplicationsApi.getById(id),
@@ -68,7 +68,7 @@ export const useDeleteJobApplication = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => jobApplicationsApi.delete(id),
+    mutationFn: (id: string) => jobApplicationsApi.delete(id),
     onSuccess: (_, deletedId) => {
       // Remove from cache
       queryClient.removeQueries({

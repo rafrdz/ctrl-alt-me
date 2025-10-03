@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Runs all migrations in the internal/database/migrations directory using golang-migrate
+# Make sure you have golang-migrate installed: https://github.com/golang-migrate/migrate/tree/master/cmd/migrate#installation
+
+set -e
+
+# Ensure migrate is installed
+if ! command -v migrate &> /dev/null
+then
+    echo "migrate could not be found, please install it first."
+    exit
+fi
+
+# Load environment variables from .env.dev file
+if [ -f .env.dev ]; then
+    export $(grep -v '^#' ./.env.dev | xargs)
+else
+    echo ".env.dev file not found!"
+    exit 1
+fi
+
+echo "Environment variables loaded from .env.dev"
+
+echo "Running migrations..."
+
+migrate -path internal/database/migrations -database "postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable" up
+
+if [ $? -ne 0 ]; then
+    echo "Migrations failed."
+    exit 1
+fi

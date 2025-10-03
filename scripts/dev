@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Runs the application in development mode.
+
+set -e
+
+if [ -f .env.dev ]; then
+  export $(grep -v '^#' ./.env.dev | xargs)
+else
+  echo ".env.dev file not found!"
+  exit 1
+fi
+
+echo "Environment variables loaded from .env.dev"
+
+if ! command -v docker &> /dev/null; then
+    echo "Docker could not be found"
+    exit 1
+fi
+
+if ! docker info &> /dev/null; then
+    echo "Docker daemon is not running"
+    exit 1
+fi
+
+echo "Docker is running"
+
+if docker compose -f docker-compose.yml ps database | grep -q "Up"; then
+    echo "Database container is running"
+else
+    echo "Database container is not running"
+    echo "Try running: ./scripts/db"
+    exit 1
+fi
+
+if pg_isready -h $DATABASE_HOST -p $DATABASE_PORT -U $DATABASE_USER -d $DATABASE_NAME &> /dev/null; then
+    echo "Database is accepting connections"
+else
+    echo "Cannot connect to database"
+    echo "Check if the database is fully started: docker compose -f docker-compose.yml logs database"
+    exit 1
+fi
+
+if ! command -v migrate &> /dev/null; then
+    echo "migrate tool not found, skipping migration check"
+    echo "Install migrate: https://github.com/golang-migrate/migrate/tree/master/cmd/migrate#installation"
+else
+    echo "migrate tool is available"
+    
+    echo "Checking migration status..."
+    
+    MIGRATION_VERSION=$(migrate -path internal/database/migrations -database "postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable" version 2>&1 | xargs echo || echo "No migrations applied")
+    
+    if [ "$MIGRATION_VERSION" = "No migrations applied" ]; then
+        echo "No migrations have been applied"
+        echo "Run migrations: ./scripts/run-migrations"
+    else
+        echo "Current migration version: $MIGRATION_VERSION"
+    fi
+    
+    echo "Checking for expected tables..."
+    TABLE_COUNT=$(psql "postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable" -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'job_applications';" 2>/dev/null || echo "0")
+    
+    if [ "$TABLE_COUNT" -eq "1" ]; then
+        echo "job_applications table exists"
+    else
+        echo "job_applications table not found"
+        echo "Run migrations: ./scripts/run-migrations"
+    fi
+fi
+
+echo "Building the frontend..."
+
+cd frontend && npm install && npm run build && cd ..
+
+echo "Starting application in development mode..."
+
+go run ./cmd/ctrlaltme \
+  api \
+  --env $APP_ENV \
+  --version "1.0.0" \
+  --port $PORT \
+  --db-dsn "postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?sslmode=disable" # TODO: Change sslmode to 'require' in production
