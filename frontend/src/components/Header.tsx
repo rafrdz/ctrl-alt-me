@@ -1,6 +1,5 @@
 import React from 'react';
 import { ThemeToggle } from './ThemeToggle';
-import { CSVImport } from './CSVImport';
 import { CSVExport } from './CSVExport';
 import { useTheme } from '../contexts/ThemeContext';
 import type { JobApplication } from '../types/jobApplication';
@@ -8,7 +7,6 @@ import './Header.css';
 
 interface HeaderProps {
   onAddNew: () => void;
-  onImportSuccess?: () => void;
   isFormOpen: boolean;
   applications?: JobApplication[];
   exportFilename?: string;
@@ -16,7 +14,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   onAddNew,
-  onImportSuccess,
   isFormOpen,
   applications,
   exportFilename,
@@ -63,14 +60,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <i className="bi bi-plus-circle me-1"></i>
                 <span className="d-none d-sm-inline">Add New</span>
               </button>
-            </div>
-
-            {/* CSV Import */}
-            <div className="nav-item me-3">
-              <CSVImport
-                onImportSuccess={onImportSuccess}
-                disabled={isFormOpen}
-              />
             </div>
 
             {/* CSV Export */}

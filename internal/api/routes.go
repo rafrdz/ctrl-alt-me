@@ -29,7 +29,6 @@ func (a *API) routes() *chi.Mux {
 				r.Get("/{id}", a.handleGetJobApplicationByID)
 				r.Put("/{id}", a.handleUpdateJobApplication)
 				r.Delete("/{id}", a.handleDeleteJobApplication)
-				r.Post("/import", a.handleImportJobApplicationsCSV)
 			})
 		})
 	})

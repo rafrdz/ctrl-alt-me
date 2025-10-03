@@ -7,7 +7,7 @@ import type { JobApplicationStatus } from '../types/jobApplication';
 export const JobApplicationsView: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<JobApplicationStatus | 'all'>('all');
-  const { data: applications, refetch } = useJobApplications();
+  const { data: applications } = useJobApplications();
 
   // Filter applications based on selected status
   const filteredApplications = useMemo(() => {
@@ -31,17 +31,10 @@ export const JobApplicationsView: React.FC = () => {
     setShowCreateForm(false);
   };
 
-  const handleImportSuccess = () => {
-    // Refetch the data to show newly imported applications
-    refetch();
-    setShowCreateForm(false); // Close any open forms
-  };
-
   return (
     <div className="container-fluid" style={{ height: '100vh', display: 'flex', flexDirection: 'column', padding: 0 }}>
       <Header 
         onAddNew={handleAddNew}
-        onImportSuccess={handleImportSuccess}
         isFormOpen={showCreateForm}
         applications={filteredApplications}
         exportFilename={exportFilename}
