@@ -17,7 +17,7 @@
         "--port", "${env:PORT}",
         "--db-dsn", "postgresql://${env:DATABASE_USER}:${env:DATABASE_PASSWORD}@${env:DATABASE_HOST}:${env:DATABASE_PORT}/${env:DATABASE_NAME}?sslmode=disable"
       ],
-      "envFile": "${workspaceFolder}/.env.dev",
+      "envFile": "${workspaceFolder}/.env",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },

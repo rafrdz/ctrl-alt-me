@@ -11,14 +11,14 @@ then
     exit
 fi
 
-# Load environment variables from .env.dev file
-if [ -f .env.dev ]; then
-  export $(grep -v '^#' ./.env.dev | xargs)
+# Load environment variables from .env file
+if [ -f .env ]; then
+  export $(grep -v '^#' ./.env | xargs)
 else
-  echo ".env.dev file not found!"
+  echo ".env file not found!"
   exit 1
 fi
 
-echo "Environment variables loaded from .env.dev"
+echo "Environment variables loaded from .env"
 
 docker compose -f docker-compose.yml up -d
