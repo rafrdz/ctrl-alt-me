@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  company: MyString
+  position: MyString
+  link: MyString
+  status: MyString
+  notes: MyText
+  applied_on: 2026-04-16
+
+two:
+  user: two
+  company: MyString
+  position: MyString
+  link: MyString
+  status: MyString
+  notes: MyText
+  applied_on: 2026-04-16
