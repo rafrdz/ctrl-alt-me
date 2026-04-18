@@ -1,0 +1,9 @@
+<div class="max-w-2xl mx-auto">
+  <div class="mb-6">
+    <%= link_to "← #{@job_application.company}", job_application_path(@job_application), class: "text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" %>
+  </div>
+
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit application</h1>
+
+  <%= render "form", job_application: @job_application %>
+</div>

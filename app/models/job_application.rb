@@ -1,5 +1,6 @@
 class JobApplication < ApplicationRecord
   belongs_to :user
+  has_many :activities, dependent: :destroy
 
   enum :status, {
     applied:      "applied",
@@ -16,4 +17,5 @@ class JobApplication < ApplicationRecord
 
   scope :active, -> { where(status: %w[applied interviewing offered]) }
   scope :recent, -> { order(applied_on: :desc, created_at: :desc) }
+  scope :search, ->(query) { where("company LIKE :q OR position LIKE :q", q: "%#{sanitize_sql_like(query)}%") }
 end

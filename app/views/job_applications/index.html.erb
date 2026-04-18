@@ -1,0 +1,118 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Job Applications</h1>
+  <div class="flex items-center gap-3">
+    <%= link_to "Export CSV", job_applications_path(format: :csv, search: @search),
+        class: "rounded-md px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" %>
+    <%= link_to "Add application", new_job_application_path,
+        class: "rounded-md px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors" %>
+  </div>
+</div>
+
+<%# Search %>
+<%= form_with url: job_applications_path, method: :get, class: "mb-6", data: { turbo_action: "advance" } do |form| %>
+  <div class="relative">
+    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+    <%= form.search_field :search, value: @search, placeholder: "Search by company or position\u2026",
+        autofocus: @search.present?,
+        class: "block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-10 pr-3 py-2 text-sm dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" %>
+  </div>
+<% end %>
+
+<% if @search.present? %>
+  <div class="flex items-center gap-2 mb-6 text-sm text-gray-500 dark:text-gray-400">
+    <span>Showing results for "<strong class="text-gray-900 dark:text-white"><%= @search %></strong>"</span>
+    <%= link_to "Clear", job_applications_path, class: "text-blue-600 dark:text-blue-400 hover:underline" %>
+  </div>
+<% end %>
+
+<%# Stats %>
+<% if @total > 0 %>
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-6 py-4 mb-8 transition-colors">
+    <div class="flex items-baseline justify-between mb-3">
+      <span class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Overview</span>
+      <span class="text-sm text-gray-400 dark:text-gray-500"><%= @total %> total</span>
+    </div>
+
+    <%# Progress bar %>
+    <div class="flex h-2 rounded-full overflow-hidden mb-4 bg-gray-100 dark:bg-gray-700">
+      <% bar_colors = { "accepted" => "bg-green-500", "interviewing" => "bg-yellow-400", "offered" => "bg-purple-500",
+                        "applied" => "bg-blue-400", "rejected" => "bg-red-400", "ghosted" => "bg-gray-300", "withdrawn" => "bg-orange-400" } %>
+      <% bar_colors.each do |status, color| %>
+        <% count = @stats[status].to_i %>
+        <% next if count == 0 %>
+        <div class="<%= color %> transition-all" style="width: <%= (count.to_f / @total * 100).round(1) %>%"
+             title="<%= status.capitalize %>: <%= count %>"></div>
+      <% end %>
+    </div>
+
+    <%# Stat pills %>
+    <div class="flex flex-wrap gap-3 items-center">
+      <% ["accepted", "offered", "interviewing", "applied", "rejected", "ghosted", "withdrawn"].each do |status| %>
+        <% count = @stats[status].to_i %>
+        <% next if count == 0 %>
+        <% active_filter = @status_filter == status %>
+        <%= link_to (active_filter ? job_applications_path : job_applications_path(status: status)),
+            class: "flex items-center gap-1.5 text-sm rounded-full px-1 py-0.5 transition-colors #{active_filter ? 'ring-2 ring-offset-1 ring-gray-400 dark:ring-gray-500 dark:ring-offset-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}" do %>
+          <%= status_badge(status) %>
+          <span class="text-gray-600 dark:text-gray-300 font-medium"><%= count %></span>
+          <span class="text-gray-400 dark:text-gray-500 text-xs">(<%= (count.to_f / @total * 100).round %>%)</span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @status_filter %>
+  <%# Filtered view %>
+  <section>
+    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+      <%= @status_filter.capitalize %>
+      <span class="ml-1 font-normal normal-case text-gray-400 dark:text-gray-500">(<%= @filtered.size %>)</span>
+    </h2>
+    <% if @filtered.any? %>
+      <div class="space-y-2">
+        <% @filtered.each do |app| %>
+          <%= render "card", app: app %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-400 dark:text-gray-500 py-4">No applications with this status.</p>
+    <% end %>
+  </section>
+<% else %>
+  <%# Active applications %>
+  <section class="mb-10">
+    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+      Active
+      <span class="ml-1 font-normal normal-case text-gray-400 dark:text-gray-500">(<%= @active.size %>)</span>
+    </h2>
+
+    <% if @active.any? %>
+      <div class="space-y-2">
+        <% @active.each do |app| %>
+          <%= render "card", app: app %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-400 dark:text-gray-500 py-4">No active applications. <%= link_to "Add one", new_job_application_path, class: "text-blue-600 dark:text-blue-400 hover:underline" %>.</p>
+    <% end %>
+  </section>
+
+  <%# Archived applications %>
+  <section>
+    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+      Archive
+      <span class="ml-1 font-normal normal-case text-gray-400 dark:text-gray-500">(<%= @archived.size %>)</span>
+    </h2>
+
+    <% if @archived.any? %>
+      <div class="space-y-2">
+        <% @archived.each do |app| %>
+          <%= render "card", app: app %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-400 dark:text-gray-500 py-4">No archived applications yet.</p>
+    <% end %>
+  </section>
+<% end %>
