@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   resource :registration, only: %i[new create]
 
   resources :job_applications do
+    collection do
+      post :import
+    end
     resources :activities, only: %i[create destroy]
   end
 

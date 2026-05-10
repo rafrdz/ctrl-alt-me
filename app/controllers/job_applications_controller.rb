@@ -61,6 +61,39 @@ class JobApplicationsController < ApplicationController
     redirect_to job_applications_path, notice: "Application removed.", status: :see_other
   end
 
+  def import
+    file = params[:file]
+
+    unless file.present? && file.content_type == "text/csv"
+      redirect_to job_applications_path, alert: "Please upload a valid CSV file." and return
+    end
+
+    require "csv"
+    imported = 0
+    skipped = 0
+
+    CSV.parse(file.read, headers: true, liberal_parsing: true) do |row|
+      app = current_user.job_applications.find_or_initialize_by(
+        company: row["Company"],
+        position: row["Position"]
+      )
+
+      if app.persisted?
+        skipped += 1
+        next
+      end
+
+      app.link = row["Link"].presence || ""
+      app.status = row["Status"]
+      app.notes = row["Notes"].presence
+      app.applied_on = row["Applied On"].present? ? Date.parse(row["Applied On"]) : nil
+
+      imported += 1 if app.save
+    end
+
+    redirect_to job_applications_path, notice: "Import complete. #{imported} added, #{skipped} already existed."
+  end
+
   private
 
   def set_job_application

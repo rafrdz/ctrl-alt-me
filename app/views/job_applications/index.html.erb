@@ -1,6 +1,13 @@
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Job Applications</h1>
   <div class="flex items-center gap-3">
+    <%= form_with url: import_job_applications_path, method: :post, multipart: true, class: "flex items-center gap-2" do |form| %>
+      <%= form.file_field :file, accept: ".csv", class: "hidden", id: "csv-import-input", onchange: "this.form.requestSubmit()" %>
+      <label for="csv-import-input"
+             class="rounded-md px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+        Import CSV
+      </label>
+    <% end %>
     <%= link_to "Export CSV", job_applications_path(format: :csv, search: @search),
         class: "rounded-md px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" %>
     <%= link_to "Add application", new_job_application_path,
