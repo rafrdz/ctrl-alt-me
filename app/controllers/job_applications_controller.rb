@@ -72,7 +72,7 @@ class JobApplicationsController < ApplicationController
     imported = 0
     skipped = 0
 
-    CSV.parse(file.read, headers: true, liberal_parsing: true) do |row|
+    CSV.parse(file.read.force_encoding("UTF-8"), headers: true, liberal_parsing: true) do |row|
       app = current_user.job_applications.find_or_initialize_by(
         company: row["Company"],
         position: row["Position"]
