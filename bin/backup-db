@@ -1,0 +1,49 @@
+#!/bin/bash
+set -euo pipefail
+
+# Backup the production SQLite database from the running Kamal container via SSH.
+#
+# Uses KAMAL_SERVER_IP and KAMAL_SERVER_USER from the environment (same vars
+# used by config/deploy.yml).
+#
+# Usage:
+#   bin/backup-db [output_path]
+#
+# Arguments:
+#   output_path  Local destination for the backup file (default: storage/backup.sqlite3)
+
+APP_NAME="ctrl_alt_me"
+CONTAINER_DB="/rails/storage/production.sqlite3"
+CONTAINER_BACKUP="/tmp/backup.sqlite3"
+LOCAL_DEST="${1:-storage/backup.sqlite3}"
+
+SERVER_USER="${KAMAL_SERVER_USER:?KAMAL_SERVER_USER is not set}"
+SERVER_IP="${KAMAL_SERVER_IP:?KAMAL_SERVER_IP is not set}"
+SSH_TARGET="${SERVER_USER}@${SERVER_IP}"
+
+ssh_cmd() {
+  ssh -o StrictHostKeyChecking=accept-new "$SSH_TARGET" "$@"
+}
+
+echo "Finding running container on ${SSH_TARGET}..."
+container_id=$(ssh_cmd docker ps --filter "name=^${APP_NAME}-web" --format "'{{.ID}}'" | head -n 1)
+
+if [ -z "$container_id" ]; then
+  echo "Error: No running container found matching '${APP_NAME}-web'" >&2
+  exit 1
+fi
+
+echo "Creating backup inside container ${container_id}..."
+ssh_cmd docker exec "$container_id" sqlite3 "$CONTAINER_DB" "\".backup ${CONTAINER_BACKUP}\""
+
+echo "Copying backup out of container..."
+ssh_cmd docker cp "$container_id:$CONTAINER_BACKUP" /tmp/backup.sqlite3
+
+echo "Copying backup to ${LOCAL_DEST}..."
+scp -o StrictHostKeyChecking=accept-new "${SSH_TARGET}:/tmp/backup.sqlite3" "$LOCAL_DEST"
+
+echo "Cleaning up remote temporary files..."
+ssh_cmd rm -f /tmp/backup.sqlite3
+ssh_cmd docker exec "$container_id" rm -f "$CONTAINER_BACKUP"
+
+echo "Backup saved to ${LOCAL_DEST}"
